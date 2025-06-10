@@ -5,19 +5,19 @@ services:
 #    extends:
 #      file: ./postgresql.yml
 #      service: postgresql
-  keycloak:
-    extends:
-      file: ./keycloak.yml
-      service: keycloak
+#  keycloak:
+#    extends:
+#      file: ./keycloak.yml
+#      service: keycloak
   redis:
     extends:
       file: ./redis.yml
       service: redis
-  consul:
-    extends:
-      file: ./consul.yml
-      service: consul
-  consul-config-loader:
-    extends:
-      file: ./consul.yml
-      service: consul-config-loader
+#  consul:
+#    extends:
+#      file: ./consul.yml
+#      service: consul
+#  consul-config-loader:
+#    extends:
+#      file: ./consul.yml
+#      service: consul-config-loader
