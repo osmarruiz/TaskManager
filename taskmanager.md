@@ -69,6 +69,8 @@ Tienes total libertad para definir la estructura del proyecto, siempre que se cu
 - Cada proyecto debe contener:
   - `title` (Título)
   - `description` (Descripción)
+  - Cada Proyecto debe estar asociada a un `WorkGroup`.
+  - Puede tener asignados uno o varios miembros del grupo (no necesariamente el creador).
   - Lista de **subtareas**, que son instancias de `Task` con la misma estructura y comportamiento.
 
 ---
