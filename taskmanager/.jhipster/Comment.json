@@ -1,0 +1,48 @@
+{
+  "annotations": {
+    "changelogDate": "20250613233935"
+  },
+  "applications": "*",
+  "clientRootFolder": "taskmanager",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "content",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "lastEditTime",
+      "fieldType": "Instant"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "taskmanager",
+  "name": "Comment",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "task",
+      "relationshipName": "task",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityName": "user",
+      "relationshipName": "author",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required",
+      "relationshipWithBuiltInEntity": true
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

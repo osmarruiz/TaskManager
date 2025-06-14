@@ -56,9 +56,9 @@ spring:
       port: 8500
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/dcmc_taskmanager_db
-    username: admin
-    password: admin
+    url: jdbc:postgresql://localhost:5434/taskmanager
+    username: taskmanager
+    password:
     hikari:
       poolName: Hikari
       auto-commit: false

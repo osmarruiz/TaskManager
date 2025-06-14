@@ -1,0 +1,76 @@
+{
+  "annotations": {
+    "changelogDate": "20250613233934"
+  },
+  "applications": "*",
+  "clientRootFolder": "taskmanager",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "title",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "priority",
+      "fieldType": "TaskPriority",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "LOW,NORMAL,HIGH"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "TaskStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "NOT_STARTED,WORKING_ON_IT,DONE,ARCHIVED"
+    },
+    {
+      "fieldName": "createTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updateTime",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "deadline",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "archived",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "archivedDate",
+      "fieldType": "ZonedDateTime"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "taskmanager",
+  "name": "Task",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "workGroup",
+      "relationshipName": "workGroup",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityName": "project",
+      "relationshipName": "parentProject",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}
