@@ -4,6 +4,7 @@ import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
 import com.dcmc.apps.taskmanager.service.WorkGroupQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
+import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -64,15 +65,14 @@ public class WorkGroupResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<WorkGroupDTO> createWorkGroup(@Valid @RequestBody WorkGroupDTO workGroupDTO) throws URISyntaxException {
+    public ResponseEntity<WorkGroupDTO> createWorkGroup(@Valid @RequestBody CreateWorkGroupDTO workGroupDTO) throws URISyntaxException {
         LOG.debug("REST request to save WorkGroup : {}", workGroupDTO);
-        if (workGroupDTO.getId() != null) {
-            throw new BadRequestAlertException("A new workGroup cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        workGroupDTO = workGroupService.save(workGroupDTO);
-        return ResponseEntity.created(new URI("/api/work-groups/" + workGroupDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, workGroupDTO.getId().toString()))
-            .body(workGroupDTO);
+
+        WorkGroupDTO result = workGroupService.save(workGroupDTO);
+
+        return ResponseEntity.created(new URI("/api/work-groups/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**

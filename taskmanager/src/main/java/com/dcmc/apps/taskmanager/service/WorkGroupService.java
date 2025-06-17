@@ -2,6 +2,7 @@ package com.dcmc.apps.taskmanager.service;
 
 import com.dcmc.apps.taskmanager.domain.WorkGroup;
 import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
+import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.mapper.WorkGroupMapper;
 import java.util.Optional;
@@ -31,12 +32,16 @@ public class WorkGroupService {
     /**
      * Save a workGroup.
      *
-     * @param workGroupDTO the entity to save.
+     * @param createWorkGroupDTO the entity to save.
      * @return the persisted entity.
      */
-    public WorkGroupDTO save(WorkGroupDTO workGroupDTO) {
-        LOG.debug("Request to save WorkGroup : {}", workGroupDTO);
-        WorkGroup workGroup = workGroupMapper.toEntity(workGroupDTO);
+    public WorkGroupDTO save(CreateWorkGroupDTO createWorkGroupDTO) {
+        LOG.debug("Request to save WorkGroup : {}", createWorkGroupDTO);
+
+        WorkGroup workGroup = new WorkGroup();
+        workGroup.setName(createWorkGroupDTO.getName());
+        workGroup.setDescription(createWorkGroupDTO.getDescription());
+
         workGroup = workGroupRepository.save(workGroup);
         return workGroupMapper.toDto(workGroup);
     }
