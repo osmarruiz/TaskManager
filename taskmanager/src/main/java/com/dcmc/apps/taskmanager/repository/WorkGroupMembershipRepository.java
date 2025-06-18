@@ -51,5 +51,11 @@ public interface WorkGroupMembershipRepository
         @Param("login") String login,
         @Param("roles") List<Role> roles);
 
+    @Query("SELECT wgm FROM WorkGroupMembership wgm WHERE wgm.workGroup.id = :workGroupId")
+    List<WorkGroupMembership> findByWorkGroupId(@Param("workGroupId") Long workGroupId);
+
+    @Query("SELECT wgm FROM WorkGroupMembership wgm JOIN FETCH wgm.workGroup WHERE wgm.user.login = :login")
+    List<WorkGroupMembership> findByUserLogin(@Param("login") String login);
+
 
 }

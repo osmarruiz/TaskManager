@@ -1,6 +1,7 @@
 package com.dcmc.apps.taskmanager.web.rest;
 
 import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
+import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.WorkGroupQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -296,4 +298,30 @@ public class WorkGroupResource {
             .headers(HeaderUtil.createAlert(applicationName, "workGroup.member.removed", id.toString()))
             .build();
     }
+
+    /**
+     * {@code GET /work-groups/{id}/members} : Obtiene todos los miembros de un grupo con sus roles.
+     */
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<MemberWithRoleDTO>> getAllMembersWithRoles(@PathVariable Long id) {
+        LOG.debug("REST request to get all members with roles for work group {}", id);
+        List<MemberWithRoleDTO> members = workGroupService.getAllMembersWithRoles(id);
+        return ResponseEntity.ok().body(members);
+    }
+
+    /**
+     * {@code DELETE /work-groups/{id}/leave} : Permite a un usuario salir de un grupo.
+     */
+    @DeleteMapping("/{id}/leave")
+    public ResponseEntity<Void> leaveWorkGroup(@PathVariable Long id) {
+        String userLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not logged in"));
+
+        workGroupService.leaveWorkGroup(id, userLogin);
+        return ResponseEntity.noContent()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.left", id.toString()))
+            .build();
+    }
+
+
 }

@@ -9,12 +9,15 @@ import com.dcmc.apps.taskmanager.repository.WorkGroupMembershipRepository;
 import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
 import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
+import com.dcmc.apps.taskmanager.service.dto.MemberWithRoleDTO;
+import com.dcmc.apps.taskmanager.service.dto.UserWorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.mapper.WorkGroupMapper;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
@@ -284,6 +287,51 @@ public class WorkGroupService {
         // Eliminar membresía
         workGroupMembershipRepository.delete(membership);
         updateWorkGroupAudit(workGroup);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberWithRoleDTO> getAllMembersWithRoles(Long workGroupId) {
+        return workGroupMembershipRepository.findByWorkGroupId(workGroupId)
+            .stream()
+            .map(membership -> new MemberWithRoleDTO(
+                membership.getUser().getLogin(),
+                membership.getUser().getFirstName() + " " + membership.getUser().getLastName(),
+                membership.getRole(),
+                membership.getJoinDate()))
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserWorkGroupDTO> getUserWorkGroups(String userLogin) {
+        return workGroupMembershipRepository.findByUserLogin(userLogin)
+            .stream()
+            .map(membership -> new UserWorkGroupDTO(
+                membership.getWorkGroup().getId(),
+                membership.getWorkGroup().getName(),
+                membership.getRole()))
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void leaveWorkGroup(Long workGroupId, String userLogin) {
+        // Validar que el grupo existe
+        WorkGroup workGroup = workGroupRepository.findById(workGroupId)
+            .orElseThrow(() -> new BadRequestAlertException("WorkGroup not found", ENTITY_NAME, "idnotfound"));
+
+        // Obtener la membresía
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupAndUserLogin(workGroup, userLogin)
+            .orElseThrow(() -> new BadRequestAlertException("User is not a member", ENTITY_NAME, "not.member"));
+
+        // Validar que no es el owner
+        if (membership.getRole() == Role.OWNER) {
+            throw new BadRequestAlertException("Owner cannot leave the group", ENTITY_NAME, "owner.cannot.leave");
+        }
+
+        // Eliminar membresía
+        workGroupMembershipRepository.delete(membership);
+
+        workGroupRepository.save(workGroup);
     }
 
     // Métodos auxiliares
