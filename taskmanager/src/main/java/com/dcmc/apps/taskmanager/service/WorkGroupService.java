@@ -7,6 +7,7 @@ import com.dcmc.apps.taskmanager.domain.enumeration.Role;
 import com.dcmc.apps.taskmanager.repository.UserRepository;
 import com.dcmc.apps.taskmanager.repository.WorkGroupMembershipRepository;
 import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
+import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.mapper.WorkGroupMapper;
@@ -15,8 +16,11 @@ import java.util.Optional;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 
 /**
  * Service Implementation for managing {@link com.dcmc.apps.taskmanager.domain.WorkGroup}.
@@ -106,6 +110,82 @@ public class WorkGroupService {
             workGroupId, currentOwner.getUser().getId(), newOwnerId);
     }
 
+    @Transactional
+    public void addModerator(Long workGroupId, String userId) {
+        LOG.debug("Adding user {} as moderator to work group {}", userId, workGroupId);
+
+        WorkGroup workGroup = validateWorkGroup(workGroupId);
+        User user = validateUser(userId);
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not logged in"));
+
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLoginAndRole(workGroupId, currentUserLogin, Role.OWNER) &&
+            !workGroupMembershipRepository.existsByWorkGroupIdAndUserLoginAndRole(workGroupId, currentUserLogin, Role.MODERADOR)) {
+            throw new AccessDeniedException("Only the group owner or moderator can add moderators");
+        }
+
+
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupAndUser(workGroup, user)
+            .orElseThrow(() -> new BadRequestAlertException("User is not a group member", ENTITY_NAME, "notmember"));
+
+        if (membership.getRole() == Role.MODERADOR) {
+            throw new BadRequestAlertException("User is already a moderator", ENTITY_NAME, "already.moderator");
+        }
+
+        if (membership.getRole() == Role.OWNER) {
+            throw new BadRequestAlertException("Cannot modify owner role", ENTITY_NAME, "is.owner");
+        }
+
+        membership.setRole(Role.MODERADOR);
+        workGroupMembershipRepository.save(membership);
+        updateWorkGroupAudit(workGroup);
+    }
+
+    @Transactional
+    public void removeModerator(Long workGroupId, String userId) {
+        LOG.debug("Removing moderator {} from work group {}", userId, workGroupId);
+
+        WorkGroup workGroup = validateWorkGroup(workGroupId);
+        User user = validateUser(userId);
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not logged in"));
+
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLoginAndRole(
+            workGroupId, currentUserLogin, Role.OWNER)) {
+            throw new AccessDeniedException("Only the group owner can add moderators");
+        }
+
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupAndUser(workGroup, user)
+            .orElseThrow(() -> new BadRequestAlertException("User is not a group member", ENTITY_NAME, "notmember"));
+
+        if (membership.getRole() != Role.MODERADOR) {
+            throw new BadRequestAlertException("User is not a moderator", ENTITY_NAME, "not.moderator");
+        }
+
+        membership.setRole(Role.MIEMBRO);
+        workGroupMembershipRepository.save(membership);
+        updateWorkGroupAudit(workGroup);
+    }
+
+
+    // Métodos auxiliares
+    private WorkGroup validateWorkGroup(Long id) {
+        return workGroupRepository.findById(id)
+            .orElseThrow(() -> new BadRequestAlertException("WorkGroup not found", ENTITY_NAME, "idnotfound"));
+    }
+
+    private User validateUser(String id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "idnotfound"));
+    }
+
+    private void updateWorkGroupAudit(WorkGroup workGroup) {
+        workGroupRepository.save(workGroup);
+    }
 
     /**
      * Update a workGroup.

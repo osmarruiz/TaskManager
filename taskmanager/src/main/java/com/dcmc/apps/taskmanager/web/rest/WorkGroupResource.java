@@ -5,6 +5,7 @@ import com.dcmc.apps.taskmanager.service.WorkGroupQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
+import com.dcmc.apps.taskmanager.service.dto.ModeratorActionDTO;
 import com.dcmc.apps.taskmanager.service.dto.TransferOwnershipDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
@@ -119,7 +120,7 @@ public class WorkGroupResource {
      *         o con status {@code 404 (Not Found)} si el grupo o usuario no existen,
      *         o con status {@code 500 (Internal Server Error)} si ocurre un error inesperado.
      */
-    @PutMapping("/work-groups/{id}/transfer-ownership")
+    @PutMapping("/{id}/transfer-ownership")
     public ResponseEntity<Void> transferOwnership(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody TransferOwnershipDTO transferOwnershipDTO
@@ -134,6 +135,40 @@ public class WorkGroupResource {
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createAlert(applicationName, "Se transfirió la propiedad correctamente", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code POST /work-groups/:id/moderators} : Agrega un moderador al grupo.
+     * @param id ID del grupo
+     * @param moderatorActionDTO DTO con el ID del usuario
+     * @return ResponseEntity con status 200 (OK)
+     */
+    @PostMapping("/{id}/moderators")
+    public ResponseEntity<Void> addModerator(
+        @PathVariable Long id,
+        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
+
+        workGroupService.addModerator(id, moderatorActionDTO.getUserId());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.added", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code DELETE /work-groups/:id/moderators} : Elimina un moderador del grupo.
+     * @param id ID del grupo
+     * @param moderatorActionDTO DTO con el ID del usuario
+     * @return ResponseEntity con status 200 (OK)
+     */
+    @DeleteMapping("/{id}/moderators")
+    public ResponseEntity<Void> removeModerator(
+        @PathVariable Long id,
+        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
+
+        workGroupService.removeModerator(id, moderatorActionDTO.getUserId());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.removed", id.toString()))
             .build();
     }
 
