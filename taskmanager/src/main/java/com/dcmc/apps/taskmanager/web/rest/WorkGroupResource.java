@@ -5,6 +5,7 @@ import com.dcmc.apps.taskmanager.service.WorkGroupQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
+import com.dcmc.apps.taskmanager.service.dto.TransferOwnershipDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -106,6 +107,34 @@ public class WorkGroupResource {
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, workGroupDTO.getId().toString()))
             .body(workGroupDTO);
+    }
+
+    /**
+     * {@code PUT /work-groups/{id}/transfer-ownership} : Transfiere la propiedad de un grupo a otro usuario.
+     *
+     * @param id el id del grupo a transferir.
+     * @param transferOwnershipDTO contiene el ID del nuevo propietario.
+     * @return el {@link ResponseEntity} con status {@code 200 (OK)} si la transferencia fue exitosa,
+     *         o con status {@code 400 (Bad Request)} si los datos son inválidos,
+     *         o con status {@code 404 (Not Found)} si el grupo o usuario no existen,
+     *         o con status {@code 500 (Internal Server Error)} si ocurre un error inesperado.
+     */
+    @PutMapping("/work-groups/{id}/transfer-ownership")
+    public ResponseEntity<Void> transferOwnership(
+        @PathVariable(value = "id", required = false) final Long id,
+        @Valid @RequestBody TransferOwnershipDTO transferOwnershipDTO
+    ) {
+        LOG.debug("REST request to transfer ownership of WorkGroup : {}, {}", id, transferOwnershipDTO);
+
+        if (transferOwnershipDTO.getNewOwnerUserId() == null) {
+            throw new BadRequestAlertException("Se requiere el ID del nuevo propietario", ENTITY_NAME, "newOwnerIdnull");
+        }
+
+        workGroupService.transferOwnership(id, transferOwnershipDTO.getNewOwnerUserId());
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "Se transfirió la propiedad correctamente", id.toString()))
+            .build();
     }
 
     /**
