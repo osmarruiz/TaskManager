@@ -4,10 +4,7 @@ import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
 import com.dcmc.apps.taskmanager.service.WorkGroupQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
-import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
-import com.dcmc.apps.taskmanager.service.dto.ModeratorActionDTO;
-import com.dcmc.apps.taskmanager.service.dto.TransferOwnershipDTO;
-import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
+import com.dcmc.apps.taskmanager.service.dto.*;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -111,68 +108,6 @@ public class WorkGroupResource {
     }
 
     /**
-     * {@code PUT /work-groups/{id}/transfer-ownership} : Transfiere la propiedad de un grupo a otro usuario.
-     *
-     * @param id el id del grupo a transferir.
-     * @param transferOwnershipDTO contiene el ID del nuevo propietario.
-     * @return el {@link ResponseEntity} con status {@code 200 (OK)} si la transferencia fue exitosa,
-     *         o con status {@code 400 (Bad Request)} si los datos son inválidos,
-     *         o con status {@code 404 (Not Found)} si el grupo o usuario no existen,
-     *         o con status {@code 500 (Internal Server Error)} si ocurre un error inesperado.
-     */
-    @PutMapping("/{id}/transfer-ownership")
-    public ResponseEntity<Void> transferOwnership(
-        @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody TransferOwnershipDTO transferOwnershipDTO
-    ) {
-        LOG.debug("REST request to transfer ownership of WorkGroup : {}, {}", id, transferOwnershipDTO);
-
-        if (transferOwnershipDTO.getNewOwnerUserId() == null) {
-            throw new BadRequestAlertException("Se requiere el ID del nuevo propietario", ENTITY_NAME, "newOwnerIdnull");
-        }
-
-        workGroupService.transferOwnership(id, transferOwnershipDTO.getNewOwnerUserId());
-
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createAlert(applicationName, "Se transfirió la propiedad correctamente", id.toString()))
-            .build();
-    }
-
-    /**
-     * {@code POST /work-groups/:id/moderators} : Agrega un moderador al grupo.
-     * @param id ID del grupo
-     * @param moderatorActionDTO DTO con el ID del usuario
-     * @return ResponseEntity con status 200 (OK)
-     */
-    @PostMapping("/{id}/moderators")
-    public ResponseEntity<Void> addModerator(
-        @PathVariable Long id,
-        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
-
-        workGroupService.addModerator(id, moderatorActionDTO.getUserId());
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.added", id.toString()))
-            .build();
-    }
-
-    /**
-     * {@code DELETE /work-groups/:id/moderators} : Elimina un moderador del grupo.
-     * @param id ID del grupo
-     * @param moderatorActionDTO DTO con el ID del usuario
-     * @return ResponseEntity con status 200 (OK)
-     */
-    @DeleteMapping("/{id}/moderators")
-    public ResponseEntity<Void> removeModerator(
-        @PathVariable Long id,
-        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
-
-        workGroupService.removeModerator(id, moderatorActionDTO.getUserId());
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.removed", id.toString()))
-            .build();
-    }
-
-    /**
      * {@code PATCH  /work-groups/:id} : Partial updates given fields of an existing workGroup, field will ignore if it is null
      *
      * @param id the id of the workGroupDTO to save.
@@ -264,6 +199,101 @@ public class WorkGroupResource {
         workGroupService.delete(id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
+            .build();
+    }
+
+//    ****************************************************************************************************************
+
+    /**
+     * {@code PUT /work-groups/{id}/transfer-ownership} : Transfiere la propiedad de un grupo a otro usuario.
+     *
+     * @param id el id del grupo a transferir.
+     * @param transferOwnershipDTO contiene el ID del nuevo propietario.
+     * @return el {@link ResponseEntity} con status {@code 200 (OK)} si la transferencia fue exitosa,
+     *         o con status {@code 400 (Bad Request)} si los datos son inválidos,
+     *         o con status {@code 404 (Not Found)} si el grupo o usuario no existen,
+     *         o con status {@code 500 (Internal Server Error)} si ocurre un error inesperado.
+     */
+    @PutMapping("/{id}/transfer-ownership")
+    public ResponseEntity<Void> transferOwnership(
+        @PathVariable(value = "id", required = false) final Long id,
+        @Valid @RequestBody TransferOwnershipDTO transferOwnershipDTO
+    ) {
+        LOG.debug("REST request to transfer ownership of WorkGroup : {}, {}", id, transferOwnershipDTO);
+
+        if (transferOwnershipDTO.getNewOwnerUserId() == null) {
+            throw new BadRequestAlertException("Se requiere el ID del nuevo propietario", ENTITY_NAME, "newOwnerIdnull");
+        }
+
+        workGroupService.transferOwnership(id, transferOwnershipDTO.getNewOwnerUserId());
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "Se transfirió la propiedad correctamente", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code POST /work-groups/:id/moderators} : Agrega un moderador al grupo.
+     * @param id ID del grupo
+     * @param moderatorActionDTO DTO con el ID del usuario
+     * @return ResponseEntity con status 200 (OK)
+     */
+    @PostMapping("/{id}/moderators")
+    public ResponseEntity<Void> addModerator(
+        @PathVariable Long id,
+        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
+
+        workGroupService.addModerator(id, moderatorActionDTO.getUserId());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.added", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code DELETE /work-groups/:id/moderators} : Elimina un moderador del grupo.
+     * @param id ID del grupo
+     * @param moderatorActionDTO DTO con el ID del usuario
+     * @return ResponseEntity con status 200 (OK)
+     */
+    @DeleteMapping("/{id}/moderators")
+    public ResponseEntity<Void> removeModerator(
+        @PathVariable Long id,
+        @Valid @RequestBody ModeratorActionDTO moderatorActionDTO) {
+
+        workGroupService.removeModerator(id, moderatorActionDTO.getUserId());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.moderator.removed", id.toString()))
+            .build();
+    }
+
+
+    /**
+     * {@code POST /work-groups/{id}/members} : Agrega un miembro al grupo.
+     * Solo OWNER y MODERADOR pueden realizar esta acción.
+     */
+    @PostMapping("/{id}/members")
+    public ResponseEntity<Void> addMember(
+        @PathVariable Long id,
+        @Valid @RequestBody MemberActionDTO memberActionDTO) {
+
+        workGroupService.addMember(id, memberActionDTO.getUserLogin());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.member.added", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code DELETE /work-groups/{id}/members} : Elimina un miembro del grupo.
+     * Solo OWNER y MODERADOR pueden realizar esta acción.
+     */
+    @DeleteMapping("/{id}/members")
+    public ResponseEntity<Void> removeMember(
+        @PathVariable Long id,
+        @Valid @RequestBody MemberActionDTO memberActionDTO) {
+
+        workGroupService.removeMember(id, memberActionDTO.getUserLogin());
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createAlert(applicationName, "workGroup.member.removed", id.toString()))
             .build();
     }
 }

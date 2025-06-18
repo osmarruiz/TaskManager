@@ -27,6 +27,8 @@ public interface WorkGroupMembershipRepository
 
     Optional<WorkGroupMembership> findByWorkGroupAndRole(WorkGroup workGroup, Role role);
 
+    boolean existsByWorkGroupAndUser(WorkGroup workGroup, User user);
+
     @Query("SELECT wgm FROM WorkGroupMembership wgm WHERE wgm.workGroup = :workGroup AND wgm.user.login = :login")
     Optional<WorkGroupMembership> findByWorkGroupAndUserLogin(
         @Param("workGroup") WorkGroup workGroup,
@@ -39,6 +41,15 @@ public interface WorkGroupMembershipRepository
         @Param("workGroupId") Long workGroupId,
         @Param("login") String login,
         @Param("role") Role role);
+
+    @Query("SELECT CASE WHEN COUNT(wgm) > 0 THEN true ELSE false END " +
+        "FROM WorkGroupMembership wgm " +
+        "WHERE wgm.workGroup.id = :workGroupId AND wgm.user.login = :login " +
+        "AND wgm.role IN :roles")
+    boolean existsByWorkGroupIdAndUserLoginAndRoleIn(
+        @Param("workGroupId") Long workGroupId,
+        @Param("login") String login,
+        @Param("roles") List<Role> roles);
 
 
 }

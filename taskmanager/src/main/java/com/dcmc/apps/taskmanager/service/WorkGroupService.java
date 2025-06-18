@@ -11,6 +11,9 @@ import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import com.dcmc.apps.taskmanager.service.mapper.WorkGroupMapper;
+
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
@@ -63,6 +66,63 @@ public class WorkGroupService {
         workGroup = workGroupRepository.save(workGroup);
         return workGroupMapper.toDto(workGroup);
     }
+
+    /**
+     * Update a workGroup.
+     *
+     * @param workGroupDTO the entity to save.
+     * @return the persisted entity.
+     */
+    public WorkGroupDTO update(WorkGroupDTO workGroupDTO) {
+        LOG.debug("Request to update WorkGroup : {}", workGroupDTO);
+        WorkGroup workGroup = workGroupMapper.toEntity(workGroupDTO);
+        workGroup = workGroupRepository.save(workGroup);
+        return workGroupMapper.toDto(workGroup);
+    }
+
+    /**
+     * Partially update a workGroup.
+     *
+     * @param workGroupDTO the entity to update partially.
+     * @return the persisted entity.
+     */
+    public Optional<WorkGroupDTO> partialUpdate(WorkGroupDTO workGroupDTO) {
+        LOG.debug("Request to partially update WorkGroup : {}", workGroupDTO);
+
+        return workGroupRepository
+            .findById(workGroupDTO.getId())
+            .map(existingWorkGroup -> {
+                workGroupMapper.partialUpdate(existingWorkGroup, workGroupDTO);
+
+                return existingWorkGroup;
+            })
+            .map(workGroupRepository::save)
+            .map(workGroupMapper::toDto);
+    }
+
+    /**
+     * Get one workGroup by id.
+     *
+     * @param id the id of the entity.
+     * @return the entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<WorkGroupDTO> findOne(Long id) {
+        LOG.debug("Request to get WorkGroup : {}", id);
+        return workGroupRepository.findById(id).map(workGroupMapper::toDto);
+    }
+
+    /**
+     * Delete the workGroup by id.
+     *
+     * @param id the id of the entity.
+     */
+    public void delete(Long id) {
+        LOG.debug("Request to delete WorkGroup : {}", id);
+        workGroupRepository.deleteById(id);
+    }
+
+    //    ****************************************************************************************************************
 
     /**
      * Transfiere la propiedad de un grupo a otro usuario.
@@ -171,74 +231,84 @@ public class WorkGroupService {
         updateWorkGroupAudit(workGroup);
     }
 
+    @Transactional
+    public void addMember(Long workGroupId, String userLogin) {
+        LOG.debug("Adding user {} to work group {}", userLogin, workGroupId);
+
+        // Validaciones
+        WorkGroup workGroup = validateWorkGroup(workGroupId);
+        User user = validateUser(userLogin);
+        validateCurrentUserPrivileges(workGroupId);
+
+        // Verificar si ya es miembro
+        if (workGroupMembershipRepository.existsByWorkGroupAndUser(workGroup, user)) {
+            throw new BadRequestAlertException("User is already a member", ENTITY_NAME, "already.member");
+        }
+
+        // Crear nueva membresía
+        WorkGroupMembership membership = new WorkGroupMembership()
+            .workGroup(workGroup)
+            .user(user)
+            .role(Role.MIEMBRO)
+            .joinDate(Instant.now());
+
+        workGroupMembershipRepository.save(membership);
+        updateWorkGroupAudit(workGroup);
+    }
+
+    @Transactional
+    public void removeMember(Long workGroupId, String userLogin) {
+        LOG.debug("Removing user {} from work group {}", userLogin, workGroupId);
+
+        // Validaciones
+        WorkGroup workGroup = validateWorkGroup(workGroupId);
+        User user = validateUser(userLogin);
+        validateCurrentUserPrivileges(workGroupId);
+
+        // Obtener membresía
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupAndUser(workGroup, user)
+            .orElseThrow(() -> new BadRequestAlertException("User is not a member", ENTITY_NAME, "not.member"));
+
+        // Validar que no sea OWNER
+        if (membership.getRole() == Role.OWNER) {
+            throw new BadRequestAlertException("Cannot remove owner", ENTITY_NAME, "cannot.remove.owner");
+        }
+
+        // Validar que no se esté eliminando a sí mismo
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow();
+        if (user.getLogin().equals(currentUserLogin)) {
+            throw new BadRequestAlertException("Cannot remove yourself", ENTITY_NAME, "cannot.remove.self");
+        }
+
+        // Eliminar membresía
+        workGroupMembershipRepository.delete(membership);
+        updateWorkGroupAudit(workGroup);
+    }
 
     // Métodos auxiliares
+    private void validateCurrentUserPrivileges(Long workGroupId) {
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow();
+
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLoginAndRoleIn(
+            workGroupId,
+            currentUserLogin,
+            List.of(Role.OWNER, Role.MODERADOR))) {
+            throw new AccessDeniedException("Insufficient privileges");
+        }
+    }
+
+    private User validateUser(String login) {
+        return userRepository.findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "usernotfound"));
+    }
+
     private WorkGroup validateWorkGroup(Long id) {
         return workGroupRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("WorkGroup not found", ENTITY_NAME, "idnotfound"));
     }
 
-    private User validateUser(String id) {
-        return userRepository.findById(id)
-            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "idnotfound"));
-    }
-
     private void updateWorkGroupAudit(WorkGroup workGroup) {
         workGroupRepository.save(workGroup);
-    }
-
-    /**
-     * Update a workGroup.
-     *
-     * @param workGroupDTO the entity to save.
-     * @return the persisted entity.
-     */
-    public WorkGroupDTO update(WorkGroupDTO workGroupDTO) {
-        LOG.debug("Request to update WorkGroup : {}", workGroupDTO);
-        WorkGroup workGroup = workGroupMapper.toEntity(workGroupDTO);
-        workGroup = workGroupRepository.save(workGroup);
-        return workGroupMapper.toDto(workGroup);
-    }
-
-    /**
-     * Partially update a workGroup.
-     *
-     * @param workGroupDTO the entity to update partially.
-     * @return the persisted entity.
-     */
-    public Optional<WorkGroupDTO> partialUpdate(WorkGroupDTO workGroupDTO) {
-        LOG.debug("Request to partially update WorkGroup : {}", workGroupDTO);
-
-        return workGroupRepository
-            .findById(workGroupDTO.getId())
-            .map(existingWorkGroup -> {
-                workGroupMapper.partialUpdate(existingWorkGroup, workGroupDTO);
-
-                return existingWorkGroup;
-            })
-            .map(workGroupRepository::save)
-            .map(workGroupMapper::toDto);
-    }
-
-    /**
-     * Get one workGroup by id.
-     *
-     * @param id the id of the entity.
-     * @return the entity.
-     */
-    @Transactional(readOnly = true)
-    public Optional<WorkGroupDTO> findOne(Long id) {
-        LOG.debug("Request to get WorkGroup : {}", id);
-        return workGroupRepository.findById(id).map(workGroupMapper::toDto);
-    }
-
-    /**
-     * Delete the workGroup by id.
-     *
-     * @param id the id of the entity.
-     */
-    public void delete(Long id) {
-        LOG.debug("Request to delete WorkGroup : {}", id);
-        workGroupRepository.deleteById(id);
     }
 }
