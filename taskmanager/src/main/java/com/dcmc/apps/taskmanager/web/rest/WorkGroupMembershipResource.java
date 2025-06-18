@@ -4,6 +4,7 @@ import com.dcmc.apps.taskmanager.repository.WorkGroupMembershipRepository;
 import com.dcmc.apps.taskmanager.service.WorkGroupMembershipQueryService;
 import com.dcmc.apps.taskmanager.service.WorkGroupMembershipService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupMembershipCriteria;
+import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupMembershipDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupMembershipDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -54,22 +55,28 @@ public class WorkGroupMembershipResource {
     /**
      * {@code POST  /work-group-memberships} : Create a new workGroupMembership.
      *
-     * @param workGroupMembershipDTO the workGroupMembershipDTO to create.
+     * @param createDTO the workGroupMembershipDTO to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new workGroupMembershipDTO, or with status {@code 400 (Bad Request)} if the workGroupMembership has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
     public ResponseEntity<WorkGroupMembershipDTO> createWorkGroupMembership(
-        @Valid @RequestBody WorkGroupMembershipDTO workGroupMembershipDTO
+        @Valid @RequestBody CreateWorkGroupMembershipDTO createDTO
     ) throws URISyntaxException {
-        LOG.debug("REST request to save WorkGroupMembership : {}", workGroupMembershipDTO);
-        if (workGroupMembershipDTO.getId() != null) {
-            throw new BadRequestAlertException("A new workGroupMembership cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        workGroupMembershipDTO = workGroupMembershipService.save(workGroupMembershipDTO);
-        return ResponseEntity.created(new URI("/api/work-group-memberships/" + workGroupMembershipDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, workGroupMembershipDTO.getId().toString()))
-            .body(workGroupMembershipDTO);
+        LOG.debug("REST request to create WorkGroupMembership: {}", createDTO);
+
+
+        WorkGroupMembershipDTO result = workGroupMembershipService.save(createDTO);
+
+        return ResponseEntity
+            .created(new URI("/api/work-group-memberships/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(
+                applicationName,
+                false,
+                ENTITY_NAME,
+                result.getId().toString()
+            ))
+            .body(result);
     }
 
     /**
