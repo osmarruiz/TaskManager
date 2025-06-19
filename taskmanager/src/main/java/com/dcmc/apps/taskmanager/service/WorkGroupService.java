@@ -62,11 +62,27 @@ public class WorkGroupService {
     public WorkGroupDTO save(CreateWorkGroupDTO createWorkGroupDTO) {
         LOG.debug("Request to save WorkGroup : {}", createWorkGroupDTO);
 
+        User currentUser = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()
+                .orElseThrow(() -> new IllegalStateException("Usuario no autenticado")))
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         WorkGroup workGroup = new WorkGroup();
         workGroup.setName(createWorkGroupDTO.getName());
         workGroup.setDescription(createWorkGroupDTO.getDescription());
 
         workGroup = workGroupRepository.save(workGroup);
+
+        // Crear la membresía del propietario
+        WorkGroupMembership membership = new WorkGroupMembership()
+            .workGroup(workGroup)
+            .user(currentUser)
+            .role(Role.OWNER)
+            .joinDate(Instant.now());
+
+        workGroupMembershipRepository.save(membership);
+        LOG.info("WorkGroup created with ID: {}", workGroup.getId());
+
+
         return workGroupMapper.toDto(workGroup);
     }
 
