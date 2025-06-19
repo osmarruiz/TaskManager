@@ -17,6 +17,20 @@
                                  referencedTableName="work_group"
                                  />
 
+        <addForeignKeyConstraint baseColumnNames="priority_id"
+                                 baseTableName="task"
+                                 constraintName="fk_task__priority_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="priority"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="status_id"
+                                 baseTableName="task"
+                                 constraintName="fk_task__status_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="task_status_catalog"
+                                 />
+
         <addForeignKeyConstraint baseColumnNames="parent_project_id"
                                  baseTableName="task"
                                  constraintName="fk_task__parent_project_id"

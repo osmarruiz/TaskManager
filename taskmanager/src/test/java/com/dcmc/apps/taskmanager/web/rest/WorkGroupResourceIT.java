@@ -524,7 +524,7 @@ class WorkGroupResourceIT {
         WorkGroup partialUpdatedWorkGroup = new WorkGroup();
         partialUpdatedWorkGroup.setId(workGroup.getId());
 
-        partialUpdatedWorkGroup.creationDate(UPDATED_CREATION_DATE);
+        partialUpdatedWorkGroup.name(UPDATED_NAME).creationDate(UPDATED_CREATION_DATE);
 
         restWorkGroupMockMvc
             .perform(

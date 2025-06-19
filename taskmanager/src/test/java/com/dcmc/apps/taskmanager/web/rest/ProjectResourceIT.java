@@ -695,7 +695,7 @@ class ProjectResourceIT {
         Project partialUpdatedProject = new Project();
         partialUpdatedProject.setId(project.getId());
 
-        partialUpdatedProject.title(UPDATED_TITLE).description(UPDATED_DESCRIPTION).endDate(UPDATED_END_DATE);
+        partialUpdatedProject.startDate(UPDATED_START_DATE).endDate(UPDATED_END_DATE);
 
         restProjectMockMvc
             .perform(

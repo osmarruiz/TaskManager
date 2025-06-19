@@ -20,12 +20,6 @@
             <column name="description" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="priority" type="varchar(255)">
-                <constraints nullable="false" />
-            </column>
-            <column name="status" type="varchar(255)">
-                <constraints nullable="false" />
-            </column>
             <column name="create_time" type="${datetimeType}">
                 <constraints nullable="false" />
             </column>
@@ -42,6 +36,12 @@
                 <constraints nullable="true" />
             </column>
             <column name="work_group_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="priority_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="status_id" type="bigint">
                 <constraints nullable="false" />
             </column>
             <column name="parent_project_id" type="bigint">
@@ -74,14 +74,14 @@
             <column name="id" type="numeric"/>
             <column name="title" type="string"/>
             <column name="description" type="string"/>
-            <column name="priority" type="string"/>
-            <column name="status" type="string"/>
             <column name="create_time" type="date"/>
             <column name="update_time" type="date"/>
             <column name="deadline" type="date"/>
             <column name="archived" type="boolean"/>
             <column name="archived_date" type="date"/>
             <column name="work_group_id" type="numeric"/>
+            <column name="priority_id" type="numeric"/>
+            <column name="status_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

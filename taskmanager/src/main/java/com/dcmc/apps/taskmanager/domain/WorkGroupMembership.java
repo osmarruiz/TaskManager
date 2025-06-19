@@ -29,7 +29,7 @@ public class WorkGroupMembership implements Serializable {
 
     @NotNull
     @Column(name = "join_date", nullable = false)
-    private Instant joinDate = Instant.now();
+    private Instant joinDate;
 
     @ManyToOne(optional = false)
     @NotNull

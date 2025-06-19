@@ -555,7 +555,7 @@ class WorkGroupMembershipResourceIT {
         WorkGroupMembership partialUpdatedWorkGroupMembership = new WorkGroupMembership();
         partialUpdatedWorkGroupMembership.setId(workGroupMembership.getId());
 
-        partialUpdatedWorkGroupMembership.joinDate(UPDATED_JOIN_DATE);
+        partialUpdatedWorkGroupMembership.role(UPDATED_ROLE);
 
         restWorkGroupMembershipMockMvc
             .perform(

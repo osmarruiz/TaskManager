@@ -78,14 +78,14 @@ class TaskCriteriaTest {
         taskCriteria.id();
         taskCriteria.title();
         taskCriteria.description();
-        taskCriteria.priority();
-        taskCriteria.status();
         taskCriteria.createTime();
         taskCriteria.updateTime();
         taskCriteria.deadline();
         taskCriteria.archived();
         taskCriteria.archivedDate();
         taskCriteria.workGroupId();
+        taskCriteria.priorityId();
+        taskCriteria.statusId();
         taskCriteria.parentProjectId();
         taskCriteria.distinct();
     }
@@ -96,14 +96,14 @@ class TaskCriteriaTest {
                 condition.apply(criteria.getId()) &&
                 condition.apply(criteria.getTitle()) &&
                 condition.apply(criteria.getDescription()) &&
-                condition.apply(criteria.getPriority()) &&
-                condition.apply(criteria.getStatus()) &&
                 condition.apply(criteria.getCreateTime()) &&
                 condition.apply(criteria.getUpdateTime()) &&
                 condition.apply(criteria.getDeadline()) &&
                 condition.apply(criteria.getArchived()) &&
                 condition.apply(criteria.getArchivedDate()) &&
                 condition.apply(criteria.getWorkGroupId()) &&
+                condition.apply(criteria.getPriorityId()) &&
+                condition.apply(criteria.getStatusId()) &&
                 condition.apply(criteria.getParentProjectId()) &&
                 condition.apply(criteria.getDistinct()),
             "every filter matches"
@@ -116,14 +116,14 @@ class TaskCriteriaTest {
                 condition.apply(criteria.getId(), copy.getId()) &&
                 condition.apply(criteria.getTitle(), copy.getTitle()) &&
                 condition.apply(criteria.getDescription(), copy.getDescription()) &&
-                condition.apply(criteria.getPriority(), copy.getPriority()) &&
-                condition.apply(criteria.getStatus(), copy.getStatus()) &&
                 condition.apply(criteria.getCreateTime(), copy.getCreateTime()) &&
                 condition.apply(criteria.getUpdateTime(), copy.getUpdateTime()) &&
                 condition.apply(criteria.getDeadline(), copy.getDeadline()) &&
                 condition.apply(criteria.getArchived(), copy.getArchived()) &&
                 condition.apply(criteria.getArchivedDate(), copy.getArchivedDate()) &&
                 condition.apply(criteria.getWorkGroupId(), copy.getWorkGroupId()) &&
+                condition.apply(criteria.getPriorityId(), copy.getPriorityId()) &&
+                condition.apply(criteria.getStatusId(), copy.getStatusId()) &&
                 condition.apply(criteria.getParentProjectId(), copy.getParentProjectId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),
             "every filter matches"

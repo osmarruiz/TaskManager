@@ -1,7 +1,5 @@
 package com.dcmc.apps.taskmanager.domain;
 
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskPriority;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -34,16 +32,6 @@ public class Task implements Serializable {
     private String description;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "priority", nullable = false)
-    private TaskPriority priority;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private TaskStatus status;
-
-    @NotNull
     @Column(name = "create_time", nullable = false)
     private Instant createTime;
 
@@ -63,6 +51,15 @@ public class Task implements Serializable {
     @ManyToOne(optional = false)
     @NotNull
     private WorkGroup workGroup;
+
+    @ManyToOne(optional = false)
+    @NotNull
+    private Priority priority;
+
+    @ManyToOne(optional = false)
+    @NotNull
+    @JsonIgnoreProperties(value = { "workGroup", "createdBy" }, allowSetters = true)
+    private TaskStatusCatalog status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "workGroup" }, allowSetters = true)
@@ -107,32 +104,6 @@ public class Task implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public TaskPriority getPriority() {
-        return this.priority;
-    }
-
-    public Task priority(TaskPriority priority) {
-        this.setPriority(priority);
-        return this;
-    }
-
-    public void setPriority(TaskPriority priority) {
-        this.priority = priority;
-    }
-
-    public TaskStatus getStatus() {
-        return this.status;
-    }
-
-    public Task status(TaskStatus status) {
-        this.setStatus(status);
-        return this;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
     }
 
     public Instant getCreateTime() {
@@ -213,6 +184,32 @@ public class Task implements Serializable {
         return this;
     }
 
+    public Priority getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public Task priority(Priority priority) {
+        this.setPriority(priority);
+        return this;
+    }
+
+    public TaskStatusCatalog getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(TaskStatusCatalog taskStatusCatalog) {
+        this.status = taskStatusCatalog;
+    }
+
+    public Task status(TaskStatusCatalog taskStatusCatalog) {
+        this.setStatus(taskStatusCatalog);
+        return this;
+    }
+
     public Project getParentProject() {
         return this.parentProject;
     }
@@ -252,8 +249,6 @@ public class Task implements Serializable {
             "id=" + getId() +
             ", title='" + getTitle() + "'" +
             ", description='" + getDescription() + "'" +
-            ", priority='" + getPriority() + "'" +
-            ", status='" + getStatus() + "'" +
             ", createTime='" + getCreateTime() + "'" +
             ", updateTime='" + getUpdateTime() + "'" +
             ", deadline='" + getDeadline() + "'" +

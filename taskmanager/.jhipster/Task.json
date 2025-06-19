@@ -18,18 +18,6 @@
       "fieldValidateRules": ["required"]
     },
     {
-      "fieldName": "priority",
-      "fieldType": "TaskPriority",
-      "fieldValidateRules": ["required"],
-      "fieldValues": "LOW,NORMAL,HIGH"
-    },
-    {
-      "fieldName": "status",
-      "fieldType": "TaskStatus",
-      "fieldValidateRules": ["required"],
-      "fieldValues": "NOT_STARTED,WORKING_ON_IT,DONE,ARCHIVED"
-    },
-    {
       "fieldName": "createTime",
       "fieldType": "Instant",
       "fieldValidateRules": ["required"]
@@ -60,6 +48,20 @@
     {
       "otherEntityName": "workGroup",
       "relationshipName": "workGroup",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityName": "priority",
+      "relationshipName": "priority",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    },
+    {
+      "otherEntityName": "taskStatusCatalog",
+      "relationshipName": "status",
       "relationshipSide": "left",
       "relationshipType": "many-to-one",
       "relationshipValidateRules": "required"

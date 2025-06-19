@@ -35,7 +35,7 @@ public class Comment implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIgnoreProperties(value = { "workGroup", "parentProject" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "workGroup", "priority", "status", "parentProject" }, allowSetters = true)
     private Task task;
 
     @ManyToOne(optional = false)

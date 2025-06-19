@@ -76,14 +76,14 @@ public class TaskQueryService extends QueryService<Task> {
                 buildRangeSpecification(criteria.getId(), Task_.id),
                 buildStringSpecification(criteria.getTitle(), Task_.title),
                 buildStringSpecification(criteria.getDescription(), Task_.description),
-                buildSpecification(criteria.getPriority(), Task_.priority),
-                buildSpecification(criteria.getStatus(), Task_.status),
                 buildRangeSpecification(criteria.getCreateTime(), Task_.createTime),
                 buildRangeSpecification(criteria.getUpdateTime(), Task_.updateTime),
                 buildRangeSpecification(criteria.getDeadline(), Task_.deadline),
                 buildSpecification(criteria.getArchived(), Task_.archived),
                 buildRangeSpecification(criteria.getArchivedDate(), Task_.archivedDate),
                 buildSpecification(criteria.getWorkGroupId(), root -> root.join(Task_.workGroup, JoinType.LEFT).get(WorkGroup_.id)),
+                buildSpecification(criteria.getPriorityId(), root -> root.join(Task_.priority, JoinType.LEFT).get(Priority_.id)),
+                buildSpecification(criteria.getStatusId(), root -> root.join(Task_.status, JoinType.LEFT).get(TaskStatusCatalog_.id)),
                 buildSpecification(criteria.getParentProjectId(), root -> root.join(Task_.parentProject, JoinType.LEFT).get(Project_.id))
             );
         }

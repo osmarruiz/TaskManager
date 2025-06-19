@@ -30,7 +30,7 @@ public class WorkGroup implements Serializable {
 
     @NotNull
     @Column(name = "creation_date", nullable = false)
-    private Instant creationDate = Instant.now();
+    private Instant creationDate;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
