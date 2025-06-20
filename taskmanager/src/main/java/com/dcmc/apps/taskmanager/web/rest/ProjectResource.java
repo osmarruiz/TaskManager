@@ -1,10 +1,14 @@
 package com.dcmc.apps.taskmanager.web.rest;
 
+import com.dcmc.apps.taskmanager.domain.Project;
 import com.dcmc.apps.taskmanager.repository.ProjectRepository;
 import com.dcmc.apps.taskmanager.service.ProjectQueryService;
 import com.dcmc.apps.taskmanager.service.ProjectService;
+import com.dcmc.apps.taskmanager.service.TaskService;
 import com.dcmc.apps.taskmanager.service.criteria.ProjectCriteria;
-import com.dcmc.apps.taskmanager.service.dto.ProjectDTO;
+import com.dcmc.apps.taskmanager.service.dto.*;
+import com.dcmc.apps.taskmanager.service.dto.ProjectMemberDTO;
+import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +30,7 @@ import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
 
+
 /**
  * REST controller for managing {@link com.dcmc.apps.taskmanager.domain.Project}.
  */
@@ -46,10 +51,14 @@ public class ProjectResource {
 
     private final ProjectQueryService projectQueryService;
 
-    public ProjectResource(ProjectService projectService, ProjectRepository projectRepository, ProjectQueryService projectQueryService) {
+    private final TaskService taskService;
+
+    public ProjectResource(ProjectService projectService, ProjectRepository projectRepository, ProjectQueryService projectQueryService,
+                          TaskService taskService) {
         this.projectService = projectService;
         this.projectRepository = projectRepository;
         this.projectQueryService = projectQueryService;
+        this.taskService = taskService;
     }
 
     /**
@@ -60,15 +69,14 @@ public class ProjectResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody ProjectDTO projectDTO) throws URISyntaxException {
+    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO projectDTO) throws URISyntaxException {
         LOG.debug("REST request to save Project : {}", projectDTO);
-        if (projectDTO.getId() != null) {
-            throw new BadRequestAlertException("A new project cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        projectDTO = projectService.save(projectDTO);
-        return ResponseEntity.created(new URI("/api/projects/" + projectDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, projectDTO.getId().toString()))
-            .body(projectDTO);
+
+        ProjectDTO result = projectService.save(projectDTO);
+
+        return ResponseEntity.created(new URI("/api/projects/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -197,5 +205,54 @@ public class ProjectResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    // Custom endpoint to get projects by work group ID
+
+    @GetMapping("/work-group/{workGroupId}")
+    public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(
+        @PathVariable Long workGroupId
+    ) {
+        LOG.debug("REST request to get Projects by work group ID: {}", workGroupId);
+        List<ProjectDTO> projects = projectService.findAllByWorkGroupId(workGroupId);
+        return ResponseEntity.ok().body(projects);
+    }
+
+    @PostMapping("/{id}/add-task")
+    public ResponseEntity<TaskDTO> addTaskToProject(
+        @PathVariable Long id,
+        @Valid @RequestBody CreateTaskDTO taskDTO) {
+
+        TaskDTO createdTask = taskService.createTaskForProject(id, taskDTO);
+        return ResponseEntity
+            .created(URI.create("/api/tasks/" + createdTask.getId()))
+            .body(createdTask);
+    }
+
+    /* Endpoint para eliminar subtarea */
+    @DeleteMapping("/{id}/remove-task/{taskId}")
+    public ResponseEntity<Void> removeTaskFromProject(
+        @PathVariable Long id,
+        @PathVariable Long taskId) {
+
+        taskService.deleteTaskFromProject(id, taskId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /* Endpoint para listar subtareas */
+    @GetMapping("/{id}/tasks")
+    public ResponseEntity<List<TaskDTO>> getProjectTasks(
+        @PathVariable Long id) {
+
+        List<TaskDTO> tasks = taskService.findAllTasksByProjectId(id);
+        return ResponseEntity.ok().body(tasks);
+    }
+
+    @PostMapping("/assign-user")
+    public ResponseEntity<ProjectMemberDTO> assignUserToProject(
+        @Valid @RequestBody AssignProjectToUserDTO assignDTO) {
+
+        ProjectMemberDTO result = projectService.assignUserToProject(assignDTO);
+        return ResponseEntity.ok().body(result);
     }
 }

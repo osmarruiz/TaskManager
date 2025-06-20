@@ -33,7 +33,7 @@ public class Task implements Serializable {
 
     @NotNull
     @Column(name = "create_time", nullable = false)
-    private Instant createTime;
+    private Instant createTime = Instant.now();
 
     @NotNull
     @Column(name = "update_time", nullable = false)

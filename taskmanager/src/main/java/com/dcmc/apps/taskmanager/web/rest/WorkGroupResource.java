@@ -7,6 +7,7 @@ import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
 import com.dcmc.apps.taskmanager.service.dto.*;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
