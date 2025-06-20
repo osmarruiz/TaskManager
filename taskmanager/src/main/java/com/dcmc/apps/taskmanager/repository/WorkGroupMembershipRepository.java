@@ -65,4 +65,5 @@ public interface WorkGroupMembershipRepository
 
 
     boolean existsByWorkGroupIdAndUserLogin(Long id, String userLogin);
+    boolean existsByUserLoginAndRoleIn(String currentUserLogin, List<Role> owner);
 }

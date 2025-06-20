@@ -4,8 +4,10 @@ import com.dcmc.apps.taskmanager.repository.TaskStatusCatalogRepository;
 import com.dcmc.apps.taskmanager.service.TaskStatusCatalogQueryService;
 import com.dcmc.apps.taskmanager.service.TaskStatusCatalogService;
 import com.dcmc.apps.taskmanager.service.criteria.TaskStatusCatalogCriteria;
+import com.dcmc.apps.taskmanager.service.dto.CreateTaskStatusCatalogDTO;
 import com.dcmc.apps.taskmanager.service.dto.TaskStatusCatalogDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -64,16 +66,14 @@ public class TaskStatusCatalogResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<TaskStatusCatalogDTO> createTaskStatusCatalog(@Valid @RequestBody TaskStatusCatalogDTO taskStatusCatalogDTO)
+    public ResponseEntity<TaskStatusCatalogDTO> createTaskStatusCatalog(@Valid @RequestBody CreateTaskStatusCatalogDTO taskStatusCatalogDTO)
         throws URISyntaxException {
         LOG.debug("REST request to save TaskStatusCatalog : {}", taskStatusCatalogDTO);
-        if (taskStatusCatalogDTO.getId() != null) {
-            throw new BadRequestAlertException("A new taskStatusCatalog cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        taskStatusCatalogDTO = taskStatusCatalogService.save(taskStatusCatalogDTO);
-        return ResponseEntity.created(new URI("/api/task-status-catalogs/" + taskStatusCatalogDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, taskStatusCatalogDTO.getId().toString()))
-            .body(taskStatusCatalogDTO);
+
+        TaskStatusCatalogDTO result = taskStatusCatalogService.save(taskStatusCatalogDTO);
+        return ResponseEntity.created(new URI("/api/task-status-catalogs/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -89,24 +89,14 @@ public class TaskStatusCatalogResource {
     @PutMapping("/{id}")
     public ResponseEntity<TaskStatusCatalogDTO> updateTaskStatusCatalog(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody TaskStatusCatalogDTO taskStatusCatalogDTO
+        @Valid @RequestBody CreateTaskStatusCatalogDTO taskStatusCatalogDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update TaskStatusCatalog : {}, {}", id, taskStatusCatalogDTO);
-        if (taskStatusCatalogDTO.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        }
-        if (!Objects.equals(id, taskStatusCatalogDTO.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
-        }
 
-        if (!taskStatusCatalogRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
-
-        taskStatusCatalogDTO = taskStatusCatalogService.update(taskStatusCatalogDTO);
+        TaskStatusCatalogDTO result = taskStatusCatalogService.update(id, taskStatusCatalogDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, taskStatusCatalogDTO.getId().toString()))
-            .body(taskStatusCatalogDTO);
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -120,6 +110,8 @@ public class TaskStatusCatalogResource {
      * or with status {@code 500 (Internal Server Error)} if the taskStatusCatalogDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<TaskStatusCatalogDTO> partialUpdateTaskStatusCatalog(
         @PathVariable(value = "id", required = false) final Long id,
@@ -182,6 +174,7 @@ public class TaskStatusCatalogResource {
      * @param id the id of the taskStatusCatalogDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the taskStatusCatalogDTO, or with status {@code 404 (Not Found)}.
      */
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<TaskStatusCatalogDTO> getTaskStatusCatalog(@PathVariable("id") Long id) {
         LOG.debug("REST request to get TaskStatusCatalog : {}", id);
