@@ -6,6 +6,7 @@ import com.dcmc.apps.taskmanager.service.TaskAssignmentService;
 import com.dcmc.apps.taskmanager.service.criteria.TaskAssignmentCriteria;
 import com.dcmc.apps.taskmanager.service.dto.TaskAssignmentDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -29,6 +30,7 @@ import tech.jhipster.web.util.ResponseUtil;
 /**
  * REST controller for managing {@link com.dcmc.apps.taskmanager.domain.TaskAssignment}.
  */
+@Hidden
 @RestController
 @RequestMapping("/api/task-assignments")
 public class TaskAssignmentResource {

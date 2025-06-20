@@ -87,6 +87,8 @@ public class WorkGroupResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<WorkGroupDTO> updateWorkGroup(
         @PathVariable(value = "id", required = false) final Long id,
@@ -121,6 +123,8 @@ public class WorkGroupResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<WorkGroupDTO> partialUpdateWorkGroup(
         @PathVariable(value = "id", required = false) final Long id,
@@ -171,6 +175,8 @@ public class WorkGroupResource {
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
+
+    @Hidden
     @GetMapping("/count")
     public ResponseEntity<Long> countWorkGroups(WorkGroupCriteria criteria) {
         LOG.debug("REST request to count WorkGroups by criteria: {}", criteria);
@@ -183,6 +189,8 @@ public class WorkGroupResource {
      * @param id the id of the workGroupDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the workGroupDTO, or with status {@code 404 (Not Found)}.
      */
+
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<WorkGroupDTO> getWorkGroup(@PathVariable("id") Long id) {
         LOG.debug("REST request to get WorkGroup : {}", id);
@@ -196,6 +204,8 @@ public class WorkGroupResource {
      * @param id the id of the workGroupDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkGroup(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete WorkGroup : {}", id);

@@ -6,6 +6,7 @@ import com.dcmc.apps.taskmanager.service.TaskService;
 import com.dcmc.apps.taskmanager.service.criteria.TaskCriteria;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -59,6 +60,7 @@ public class TaskResource {
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new taskDTO, or with status {@code 400 (Bad Request)} if the task has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PostMapping("")
     public ResponseEntity<TaskDTO> createTask(@Valid @RequestBody TaskDTO taskDTO) throws URISyntaxException {
         LOG.debug("REST request to save Task : {}", taskDTO);
@@ -81,6 +83,7 @@ public class TaskResource {
      * or with status {@code 500 (Internal Server Error)} if the taskDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(
         @PathVariable(value = "id", required = false) final Long id,
@@ -115,6 +118,7 @@ public class TaskResource {
      * or with status {@code 500 (Internal Server Error)} if the taskDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<TaskDTO> partialUpdateTask(
         @PathVariable(value = "id", required = false) final Long id,
@@ -177,6 +181,7 @@ public class TaskResource {
      * @param id the id of the taskDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the taskDTO, or with status {@code 404 (Not Found)}.
      */
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<TaskDTO> getTask(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Task : {}", id);
@@ -190,6 +195,7 @@ public class TaskResource {
      * @param id the id of the taskDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Task : {}", id);

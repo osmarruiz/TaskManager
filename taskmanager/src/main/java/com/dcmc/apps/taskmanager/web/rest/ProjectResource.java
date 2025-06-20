@@ -10,6 +10,7 @@ import com.dcmc.apps.taskmanager.service.dto.*;
 import com.dcmc.apps.taskmanager.service.dto.ProjectMemberDTO;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -89,6 +90,7 @@ public class ProjectResource {
      * or with status {@code 500 (Internal Server Error)} if the projectDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<ProjectDTO> updateProject(
         @PathVariable(value = "id", required = false) final Long id,
@@ -123,6 +125,7 @@ public class ProjectResource {
      * or with status {@code 500 (Internal Server Error)} if the projectDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<ProjectDTO> partialUpdateProject(
         @PathVariable(value = "id", required = false) final Long id,
@@ -185,6 +188,7 @@ public class ProjectResource {
      * @param id the id of the projectDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the projectDTO, or with status {@code 404 (Not Found)}.
      */
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDTO> getProject(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Project : {}", id);
@@ -198,6 +202,7 @@ public class ProjectResource {
      * @param id the id of the projectDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Project : {}", id);
@@ -209,7 +214,7 @@ public class ProjectResource {
 
     // Custom endpoint to get projects by work group ID
 
-    @GetMapping("/work-group/{workGroupId}")
+    @GetMapping("/{workGroupId}")
     public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(
         @PathVariable Long workGroupId
     ) {
@@ -248,11 +253,12 @@ public class ProjectResource {
         return ResponseEntity.ok().body(tasks);
     }
 
-    @PostMapping("/assign-user")
+    @PostMapping("/{id}/assign-user")
     public ResponseEntity<ProjectMemberDTO> assignUserToProject(
-        @Valid @RequestBody AssignProjectToUserDTO assignDTO) {
+        @PathVariable Long id,
+        @Valid @RequestBody AssignProjectToUserDTO assignProjectToUserDTO) {
 
-        ProjectMemberDTO result = projectService.assignUserToProject(assignDTO);
+        ProjectMemberDTO result = projectService.assignUserToProject(id, assignProjectToUserDTO);
         return ResponseEntity.ok().body(result);
     }
 }

@@ -152,9 +152,9 @@ public class ProjectService {
             .collect(Collectors.toList());
     }
 
-    public ProjectMemberDTO assignUserToProject(AssignProjectToUserDTO assignDTO) {
+    public ProjectMemberDTO assignUserToProject(Long id, AssignProjectToUserDTO assignDTO) {
         // 1. Validar que el proyecto existe
-        Project project = projectRepository.findById(assignDTO.getProjectId())
+        Project project = projectRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
 
         // 2. Validar que el usuario existe
