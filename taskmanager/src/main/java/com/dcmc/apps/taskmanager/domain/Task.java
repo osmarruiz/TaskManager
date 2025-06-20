@@ -43,7 +43,7 @@ public class Task implements Serializable {
     private ZonedDateTime deadline;
 
     @Column(name = "archived")
-    private Boolean archived;
+    private Boolean archived = false;
 
     @Column(name = "archived_date")
     private ZonedDateTime archivedDate;

@@ -7,6 +7,7 @@ import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.dto.CreateTaskDTO;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.service.mapper.TaskMapper;
+import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,12 +17,12 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service Implementation for managing {@link com.dcmc.apps.taskmanager.domain.Task}.
- */
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
+
 @Service
 @Transactional
 public class TaskService {
@@ -29,24 +30,18 @@ public class TaskService {
     private static final Logger LOG = LoggerFactory.getLogger(TaskService.class);
 
     private final TaskRepository taskRepository;
-
     private final TaskMapper taskMapper;
-
     private final ProjectRepository projectRepository;
-
     private final UserRepository userRepository;
-
     private final WorkGroupMembershipRepository workGroupMembershipRepository;
-
     private final PriorityRepository priorityRepository;
-
     private final TaskStatusCatalogRepository statusRepository;
 
-    public TaskService(TaskRepository taskRepository, TaskMapper taskMapper, ProjectRepository projectRepository,
-                          UserRepository userRepository,
-                          WorkGroupMembershipRepository workGroupMembershipRepository,
-                          PriorityRepository priorityRepository,
-                          TaskStatusCatalogRepository statusRepository)  {
+    public TaskService(TaskRepository taskRepository, TaskMapper taskMapper,
+                       ProjectRepository projectRepository, UserRepository userRepository,
+                       WorkGroupMembershipRepository workGroupMembershipRepository,
+                       PriorityRepository priorityRepository,
+                       TaskStatusCatalogRepository statusRepository) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.projectRepository = projectRepository;
@@ -56,12 +51,38 @@ public class TaskService {
         this.statusRepository = statusRepository;
     }
 
-    /**
-     * Save a task.
-     *
-     * @param taskDTO the entity to save.
-     * @return the persisted entity.
-     */
+    // Métodos auxiliares
+    private boolean isCurrentUserAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+    }
+
+    private void validateAdminOrProjectOwnerOrModerator(Long projectId) {
+        if (isCurrentUserAdmin()) {
+            return;
+        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
+
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupIdAndUserLogin(project.getWorkGroup().getId(), currentUserLogin)
+            .orElseThrow(() -> new AccessDeniedException("User is not member of work group"));
+
+        if (!Set.of(Role.OWNER, Role.MODERADOR).contains(membership.getRole())) {
+            throw new AccessDeniedException("Insufficient privileges");
+        }
+    }
+
+    private User getCurrentUser() {
+        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()
+                .orElseThrow(() -> new AccessDeniedException("User not authenticated")))
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "usernotfound"));
+    }
+
+    // Métodos principales
     public TaskDTO save(TaskDTO taskDTO) {
         LOG.debug("Request to save Task : {}", taskDTO);
         Task task = taskMapper.toEntity(taskDTO);
@@ -69,12 +90,6 @@ public class TaskService {
         return taskMapper.toDto(task);
     }
 
-    /**
-     * Update a task.
-     *
-     * @param taskDTO the entity to save.
-     * @return the persisted entity.
-     */
     public TaskDTO update(TaskDTO taskDTO) {
         LOG.debug("Request to update Task : {}", taskDTO);
         Task task = taskMapper.toEntity(taskDTO);
@@ -82,12 +97,6 @@ public class TaskService {
         return taskMapper.toDto(task);
     }
 
-    /**
-     * Partially update a task.
-     *
-     * @param taskDTO the entity to update partially.
-     * @return the persisted entity.
-     */
     public Optional<TaskDTO> partialUpdate(TaskDTO taskDTO) {
         LOG.debug("Request to partially update Task : {}", taskDTO);
 
@@ -95,30 +104,18 @@ public class TaskService {
             .findById(taskDTO.getId())
             .map(existingTask -> {
                 taskMapper.partialUpdate(existingTask, taskDTO);
-
                 return existingTask;
             })
             .map(taskRepository::save)
             .map(taskMapper::toDto);
     }
 
-    /**
-     * Get one task by id.
-     *
-     * @param id the id of the entity.
-     * @return the entity.
-     */
     @Transactional(readOnly = true)
     public Optional<TaskDTO> findOne(Long id) {
         LOG.debug("Request to get Task : {}", id);
         return taskRepository.findById(id).map(taskMapper::toDto);
     }
 
-    /**
-     * Delete the task by id.
-     *
-     * @param id the id of the entity.
-     */
     public void delete(Long id) {
         LOG.debug("Request to delete Task : {}", id);
         taskRepository.deleteById(id);
@@ -126,26 +123,16 @@ public class TaskService {
 
     @Transactional
     public TaskDTO createTaskForProject(Long projectId, CreateTaskDTO taskDTO) {
-        // 1. Validar proyecto
+        LOG.debug("Request to create task for project {}: {}", projectId, taskDTO);
+
+        // Validar proyecto
         Project project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new RuntimeException("Proyecto no encontrado con id: " + projectId));
+            .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
 
-        // 2. Validar permisos del usuario actual (sin SecurityService)
-        String userLogin = SecurityUtils.getCurrentUserLogin()
-            .orElseThrow(() -> new RuntimeException("Usuario no autenticado"));
+        // Validar permisos (ADMIN, OWNER o MODERADOR)
+        validateAdminOrProjectOwnerOrModerator(projectId);
 
-        User user = userRepository.findOneByLogin(userLogin)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        WorkGroupMembership membership = workGroupMembershipRepository
-            .findByWorkGroupIdAndUserLogin(project.getWorkGroup().getId(),user.getLogin())
-            .orElseThrow(() -> new RuntimeException("No eres miembro del grupo"));
-
-        if (!Set.of(Role.OWNER, Role.MODERADOR).contains(membership.getRole())) {
-            throw new RuntimeException("Solo OWNER/MODERADOR pueden crear tareas");
-        }
-
-        // 3. Crear entidad
+        // Crear entidad
         Task task = new Task();
         task.setTitle(taskDTO.getTitle());
         task.setDescription(taskDTO.getDescription());
@@ -154,58 +141,63 @@ public class TaskService {
         task.setWorkGroup(project.getWorkGroup());
         task.setParentProject(project);
 
-        // 4. Establecer prioridad (por defecto o especificada)
-        Priority priority = taskDTO.getPriorityId() != null ?
-            priorityRepository.findById(taskDTO.getPriorityId())
-                .orElseThrow(() -> new RuntimeException("Prioridad no encontrada")) :
+        // Establecer prioridad
+        Priority priority =
             priorityRepository.findByName("NORMAL")
-                .orElseThrow(() -> new IllegalStateException("Prioridad por defecto no configurada"));
+                .orElseThrow(() -> new IllegalStateException("Default priority not configured"));
 
         task.setPriority(priority);
 
-        // 5. Establecer estado (por defecto o especificado)
-        TaskStatusCatalog status = taskDTO.getStatusId() != null ?
-            statusRepository.findById(taskDTO.getStatusId())
-                .orElseThrow(() -> new RuntimeException("Estado no encontrado")) :
+        // Establecer estado
+        TaskStatusCatalog status =
             statusRepository.findByName("NOT_STARTED")
-                .orElseThrow(() -> new IllegalStateException("Estado por defecto no configurado"));
+                .orElseThrow(() -> new IllegalStateException("Default status not configured"));
 
         task.setStatus(status);
 
-        // 6. Guardar
+        // Guardar
         Task savedTask = taskRepository.save(task);
+        LOG.info("Task created with ID: {}", savedTask.getId());
         return taskMapper.toDto(savedTask);
     }
 
     @Transactional
     public void deleteTaskFromProject(Long projectId, Long taskId) {
-        // 1. Verificar que el proyecto existe
-        if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found with id: " + projectId);
-        }
+        LOG.debug("Request to delete task {} from project {}", taskId, projectId);
 
-        // 2. Obtener y validar la tarea
+        // Verificar que el proyecto existe
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
+
+        // Validar permisos (ADMIN, OWNER o MODERADOR)
+        validateAdminOrProjectOwnerOrModerator(projectId);
+
+        // Obtener y validar la tarea
         Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
+            .orElseThrow(() -> new BadRequestAlertException("Task not found", "task", "idnotfound"));
 
-        // 3. Verificar pertenencia al proyecto
+        // Verificar pertenencia al proyecto
         if (task.getParentProject() == null || !task.getParentProject().getId().equals(projectId)) {
-            throw new RuntimeException("Task does not belong to the specified project");
+            throw new BadRequestAlertException("Task does not belong to project", ENTITY_NAME, "invalid.task");
         }
 
-        // 4. Validar reglas de negocio
+        // Validar reglas de negocio
         if (task.getArchived() != null && task.getArchived()) {
-            throw new RuntimeException("Cannot delete archived tasks");
+            throw new BadRequestAlertException("Cannot delete archived tasks", ENTITY_NAME, "archived.task");
         }
 
-        // 5. Eliminar
+        // Eliminar
         taskRepository.delete(task);
+        LOG.info("Task {} deleted from project {}", taskId, projectId);
     }
+
     @Transactional(readOnly = true)
     public List<TaskDTO> findAllTasksByProjectId(Long projectId) {
+        LOG.debug("Request to get all tasks for project {}", projectId);
+
         // Verificar que el proyecto existe
         if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found with id: " + projectId);
+            throw new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound");
         }
 
         return taskRepository.findByParentProjectId(projectId)
@@ -213,4 +205,31 @@ public class TaskService {
             .map(taskMapper::toDto)
             .collect(Collectors.toList());
     }
+
+//    @Transactional
+//    public void assignTask(Long taskId, String userLogin) {
+//        LOG.debug("Request to assign task {} to user {}", taskId, userLogin);
+//
+//        // Validar que la tarea existe
+//        Task task = taskRepository.findById(taskId)
+//            .orElseThrow(() -> new BadRequestAlertException("Task not found", "task", "idnotfound"));
+//
+//        // Validar permisos (ADMIN, OWNER o MODERADOR del grupo de trabajo)
+//        validateAdminOrProjectOwnerOrModerator(task.getParentProject().getId());
+//
+//        // Validar que el usuario existe
+//        User user = userRepository.findOneByLogin(userLogin)
+//            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "usernotfound"));
+//
+//        // Validar que el usuario es miembro del grupo de trabajo
+//        if (!workGroupMembershipRepository.existsByWorkGroupAndUser(task.getWorkGroup(), user)) {
+//            throw new BadRequestAlertException("User is not member of work group", ENTITY_NAME, "not.member");
+//        }
+//
+//        // Asignar tarea
+//        task.setAssignedTo(user);
+//        task.setUpdateTime(Instant.now());
+//        taskRepository.save(task);
+//        LOG.info("Task {} assigned to user {}", taskId, userLogin);
+//    }
 }

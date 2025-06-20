@@ -13,9 +13,6 @@ public class CreateTaskDTO {
     private String description;
 
     private ZonedDateTime deadline;
-    private Boolean archived;
-    private Long priorityId;
-    private Long statusId;
 
     // Getters y Setters
     public String getTitle() {
@@ -42,27 +39,4 @@ public class CreateTaskDTO {
         this.deadline = deadline;
     }
 
-    public Boolean getArchived() {
-        return archived;
-    }
-
-    public void setArchived(Boolean archived) {
-        this.archived = archived;
-    }
-
-    public Long getPriorityId() {
-        return priorityId;
-    }
-
-    public void setPriorityId(Long priorityId) {
-        this.priorityId = priorityId;
-    }
-
-    public Long getStatusId() {
-        return statusId;
-    }
-
-    public void setStatusId(Long statusId) {
-        this.statusId = statusId;
-    }
 }

@@ -1,13 +1,9 @@
 package com.dcmc.apps.taskmanager.service;
 
-import com.dcmc.apps.taskmanager.domain.Project;
-import com.dcmc.apps.taskmanager.domain.ProjectMember;
-import com.dcmc.apps.taskmanager.domain.User;
-import com.dcmc.apps.taskmanager.domain.WorkGroup;
-import com.dcmc.apps.taskmanager.repository.ProjectMemberRepository;
-import com.dcmc.apps.taskmanager.repository.ProjectRepository;
-import com.dcmc.apps.taskmanager.repository.UserRepository;
-import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
+import com.dcmc.apps.taskmanager.domain.*;
+import com.dcmc.apps.taskmanager.domain.enumeration.Role;
+import com.dcmc.apps.taskmanager.repository.*;
+import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.dto.AssignProjectToUserDTO;
 import com.dcmc.apps.taskmanager.service.dto.CreateProjectDTO;
 import com.dcmc.apps.taskmanager.service.dto.ProjectDTO;
@@ -17,14 +13,19 @@ import com.dcmc.apps.taskmanager.service.mapper.ProjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.dcmc.apps.taskmanager.service.mapper.ProjectMemberMapper;
+import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.api.OpenApiResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 
 /**
  * Service Implementation for managing {@link com.dcmc.apps.taskmanager.domain.Project}.
@@ -47,11 +48,14 @@ public class ProjectService {
 
     private final UserRepository userRepository;
 
+    private final WorkGroupMembershipRepository workGroupMembershipRepository;
+
     public ProjectService(ProjectRepository projectRepository, ProjectMapper projectMapper,
                           WorkGroupRepository workGroupRepository,
                           ProjectMemberRepository projectMemberRepository,
                           ProjectMemberMapper projectMemberMapper,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          WorkGroupMembershipRepository workGroupMembershipRepository) {
 
         this.projectRepository = projectRepository;
         this.projectMapper = projectMapper;
@@ -59,6 +63,31 @@ public class ProjectService {
         this.projectMemberRepository = projectMemberRepository;
         this.projectMemberMapper = projectMemberMapper;
         this.userRepository = userRepository;
+        this.workGroupMembershipRepository = workGroupMembershipRepository;
+    }
+
+    private boolean isCurrentUserAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+    }
+
+    private void validateAdminOrProjectOwnerOrModerator(Long projectId) {
+        if (isCurrentUserAdmin()) {
+            return;
+        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
+
+        WorkGroupMembership membership = workGroupMembershipRepository
+            .findByWorkGroupIdAndUserLogin(project.getWorkGroup().getId(), currentUserLogin)
+            .orElseThrow(() -> new AccessDeniedException("User is not member of work group"));
+
+        if (!Set.of(Role.OWNER, Role.MODERADOR).contains(membership.getRole())) {
+            throw new AccessDeniedException("Insufficient privileges");
+        }
     }
 
     /**
@@ -153,20 +182,29 @@ public class ProjectService {
     }
 
     public ProjectMemberDTO assignUserToProject(Long id, AssignProjectToUserDTO assignDTO) {
-        // 1. Validar que el proyecto existe
+        // 1. Validate user has permission (admin, owner or moderator)
+        validateAdminOrProjectOwnerOrModerator(id);
+
+        // 2. Validate that the project exists
         Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
+            .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
 
-        // 2. Validar que el usuario existe
+        // 3. Validate that the user exists
         User user = userRepository.findOneByLogin(assignDTO.getUserLogin())
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "loginnotfound"));
 
-        // 3. Validar que el usuario no esté ya asignado
+        // 4. Validate that the user is not already assigned
         if (projectMemberRepository.existsByProjectAndUser(project, user)) {
-            throw new RuntimeException("El usuario ya está asignado a este proyecto");
+            throw new BadRequestAlertException("User already assigned to project", ENTITY_NAME, "userexists");
         }
 
-        // 4. Crear la asignación
+        // 5. Validate that the user is a member of the work group
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLogin(
+            project.getWorkGroup().getId(), assignDTO.getUserLogin())) {
+            throw new BadRequestAlertException("User is not member of work group", ENTITY_NAME, "notworkgroupmember");
+        }
+
+        // 6. Create the assignment
         ProjectMember member = new ProjectMember();
         member.setProject(project);
         member.setUser(user);

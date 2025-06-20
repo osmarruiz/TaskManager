@@ -64,4 +64,5 @@ public interface WorkGroupMembershipRepository
     Optional<WorkGroupMembership> findByWorkGroupIdAndUserLogin(@Param("workGroupId") Long workGroupId, @Param("login") String login);
 
 
+    boolean existsByWorkGroupIdAndUserLogin(Long id, String userLogin);
 }
