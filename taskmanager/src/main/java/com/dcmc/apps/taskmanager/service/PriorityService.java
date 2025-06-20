@@ -2,11 +2,19 @@ package com.dcmc.apps.taskmanager.service;
 
 import com.dcmc.apps.taskmanager.domain.Priority;
 import com.dcmc.apps.taskmanager.repository.PriorityRepository;
+import com.dcmc.apps.taskmanager.service.dto.CreatePriorityDTO;
 import com.dcmc.apps.taskmanager.service.dto.PriorityDTO;
+import com.dcmc.apps.taskmanager.service.dto.VisibilityPriorityDTO;
 import com.dcmc.apps.taskmanager.service.mapper.PriorityMapper;
+
+import java.time.Instant;
 import java.util.Optional;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class PriorityService {
 
     private static final Logger LOG = LoggerFactory.getLogger(PriorityService.class);
@@ -34,9 +43,15 @@ public class PriorityService {
      * @param priorityDTO the entity to save.
      * @return the persisted entity.
      */
-    public PriorityDTO save(PriorityDTO priorityDTO) {
+    public PriorityDTO save(CreatePriorityDTO priorityDTO) {
         LOG.debug("Request to save Priority : {}", priorityDTO);
-        Priority priority = priorityMapper.toEntity(priorityDTO);
+
+        Priority priority = new Priority()
+            .name(priorityDTO.getName())
+            .description(priorityDTO.getDescription())
+            .visible(true) // Default visibility set to true
+            .createdAt(java.time.Instant.now());
+
         priority = priorityRepository.save(priority);
         return priorityMapper.toDto(priority);
     }
@@ -47,9 +62,14 @@ public class PriorityService {
      * @param priorityDTO the entity to save.
      * @return the persisted entity.
      */
-    public PriorityDTO update(PriorityDTO priorityDTO) {
+    public PriorityDTO update(CreatePriorityDTO priorityDTO) {
         LOG.debug("Request to update Priority : {}", priorityDTO);
-        Priority priority = priorityMapper.toEntity(priorityDTO);
+
+        Priority priority = new Priority()
+            .name(priorityDTO.getName())
+            .description(priorityDTO.getDescription())
+            .updatedAt(java.time.Instant.now());
+
         priority = priorityRepository.save(priority);
         return priorityMapper.toDto(priority);
     }
@@ -94,5 +114,14 @@ public class PriorityService {
     public void delete(Long id) {
         LOG.debug("Request to delete Priority : {}", id);
         priorityRepository.deleteById(id);
+    }
+
+    public PriorityDTO updateVisibility(Long id, VisibilityPriorityDTO dto) {
+        Priority priority = priorityRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Priority not found"));
+
+        priority.setVisible(dto.getVisible());
+
+        return priorityMapper.toDto(priorityRepository.save(priority));
     }
 }
