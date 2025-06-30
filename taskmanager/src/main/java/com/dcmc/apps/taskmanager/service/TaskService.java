@@ -4,17 +4,22 @@ import com.dcmc.apps.taskmanager.domain.*;
 import com.dcmc.apps.taskmanager.domain.enumeration.Role;
 import com.dcmc.apps.taskmanager.repository.*;
 import com.dcmc.apps.taskmanager.security.SecurityUtils;
+import com.dcmc.apps.taskmanager.service.dto.CommentDTO;
 import com.dcmc.apps.taskmanager.service.dto.CreateTaskDTO;
+import com.dcmc.apps.taskmanager.service.dto.TaskAssignmentDTO;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
+import com.dcmc.apps.taskmanager.service.mapper.CommentMapper;
+import com.dcmc.apps.taskmanager.service.mapper.TaskAssignmentMapper;
 import com.dcmc.apps.taskmanager.service.mapper.TaskMapper;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,12 +41,23 @@ public class TaskService {
     private final WorkGroupMembershipRepository workGroupMembershipRepository;
     private final PriorityRepository priorityRepository;
     private final TaskStatusCatalogRepository statusRepository;
+    private final TaskAssignmentRepository taskAssignmentRepository;
+
+    private final TaskAssignmentMapper taskAssignmentMapper;
+
+    private final CommentRepository commentRepository;
+
+    private final CommentMapper commentMapper;
 
     public TaskService(TaskRepository taskRepository, TaskMapper taskMapper,
                        ProjectRepository projectRepository, UserRepository userRepository,
                        WorkGroupMembershipRepository workGroupMembershipRepository,
                        PriorityRepository priorityRepository,
-                       TaskStatusCatalogRepository statusRepository) {
+                       TaskStatusCatalogRepository statusRepository,
+                       TaskAssignmentRepository taskAssignmentRepository,
+                       TaskAssignmentMapper taskAssignmentMapper,
+                       CommentRepository commentRepository, CommentMapper commentMapper) {
+
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.projectRepository = projectRepository;
@@ -49,11 +65,21 @@ public class TaskService {
         this.workGroupMembershipRepository = workGroupMembershipRepository;
         this.priorityRepository = priorityRepository;
         this.statusRepository = statusRepository;
+        this.taskAssignmentRepository = taskAssignmentRepository;
+        this.taskAssignmentMapper = taskAssignmentMapper;
+        this.commentRepository = commentRepository;
+        this.commentMapper = commentMapper;
     }
 
-    // Métodos auxiliares
+    // ========== MÉTODOS AUXILIARES ==========
+
     private boolean isCurrentUserAdmin() {
         return SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+    }
+
+    private String getCurrentUserLogin() {
+        return SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
     }
 
     private void validateAdminOrProjectOwnerOrModerator(Long projectId) {
@@ -61,28 +87,42 @@ public class TaskService {
             return;
         }
 
-        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
-            .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
-
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
 
-        WorkGroupMembership membership = workGroupMembershipRepository
-            .findByWorkGroupIdAndUserLogin(project.getWorkGroup().getId(), currentUserLogin)
-            .orElseThrow(() -> new AccessDeniedException("User is not member of work group"));
+        validateAdminOrGroupOwnerOrModerator(project.getWorkGroup().getId());
+    }
 
-        if (!Set.of(Role.OWNER, Role.MODERADOR).contains(membership.getRole())) {
+    private void validateAdminOrGroupOwnerOrModerator(Long workGroupId) {
+        if (isCurrentUserAdmin()) {
+            return;
+        }
+
+        String currentUserLogin = getCurrentUserLogin();
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLoginAndRoleIn(
+            workGroupId, currentUserLogin, List.of(Role.OWNER, Role.MODERADOR))) {
             throw new AccessDeniedException("Insufficient privileges");
         }
     }
 
-    private User getCurrentUser() {
-        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()
-                .orElseThrow(() -> new AccessDeniedException("User not authenticated")))
-            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "usernotfound"));
+    private void validateTaskNotArchived(Task task) {
+        if (task.getArchived()) {
+            throw new IllegalStateException("Cannot modify an archived task");
+        }
     }
 
-    // Métodos principales
+    private Task getTaskById(Long taskId) {
+        return taskRepository.findById(taskId)
+            .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
+    }
+
+    private User getUserByLogin(String userLogin) {
+        return userRepository.findOneByLogin(userLogin)
+            .orElseThrow(() -> new RuntimeException("User not found with login: " + userLogin));
+    }
+
+    // ========== MÉTODOS CRUD BÁSICOS ==========
+
     public TaskDTO save(TaskDTO taskDTO) {
         LOG.debug("Request to save Task : {}", taskDTO);
         Task task = taskMapper.toEntity(taskDTO);
@@ -90,11 +130,24 @@ public class TaskService {
         return taskMapper.toDto(task);
     }
 
-    public TaskDTO update(TaskDTO taskDTO) {
-        LOG.debug("Request to update Task : {}", taskDTO);
-        Task task = taskMapper.toEntity(taskDTO);
-        task = taskRepository.save(task);
-        return taskMapper.toDto(task);
+    public TaskDTO update(Long id, CreateTaskDTO taskDTO) {
+        LOG.debug("Request to update Task with id {}: {}", id, taskDTO);
+
+        // Verificar si la tarea existe
+        Task task = taskRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + id));
+
+        if(task.getArchived())
+            throw new IllegalStateException("Cannot update an archived task");
+
+        task.setTitle(taskDTO.getTitle());
+        task.setDescription(taskDTO.getDescription());
+        task.setDeadline(taskDTO.getDeadline());
+        task.setUpdateTime(Instant.now());
+
+
+        Task updatedTask = taskRepository.save(task);
+        return taskMapper.toDto(updatedTask);
     }
 
     public Optional<TaskDTO> partialUpdate(TaskDTO taskDTO) {
@@ -121,15 +174,15 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
+    // ========== MÉTODOS DE PROYECTO ==========
+
     @Transactional
     public TaskDTO createTaskForProject(Long projectId, CreateTaskDTO taskDTO) {
         LOG.debug("Request to create task for project {}: {}", projectId, taskDTO);
 
-        // Validar proyecto
+        // Validar proyecto y permisos
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
-
-        // Validar permisos (ADMIN, OWNER o MODERADOR)
         validateAdminOrProjectOwnerOrModerator(projectId);
 
         // Crear entidad
@@ -137,23 +190,16 @@ public class TaskService {
         task.setTitle(taskDTO.getTitle());
         task.setDescription(taskDTO.getDescription());
         task.setDeadline(taskDTO.getDeadline());
+        task.setArchived(false);
         task.setUpdateTime(Instant.now());
         task.setWorkGroup(project.getWorkGroup());
         task.setParentProject(project);
 
-        // Establecer prioridad
-        Priority priority =
-            priorityRepository.findByName("NORMAL")
-                .orElseThrow(() -> new IllegalStateException("Default priority not configured"));
-
-        task.setPriority(priority);
-
-        // Establecer estado
-        TaskStatusCatalog status =
-            statusRepository.findByName("NOT_STARTED")
-                .orElseThrow(() -> new IllegalStateException("Default status not configured"));
-
-        task.setStatus(status);
+        // Establecer prioridad y estado por defecto
+        task.setPriority(priorityRepository.findByName("NORMAL")
+            .orElseThrow(() -> new IllegalStateException("Default priority not configured")));
+        task.setStatus(statusRepository.findByName("NOT_STARTED")
+            .orElseThrow(() -> new IllegalStateException("Default status not configured")));
 
         // Guardar
         Task savedTask = taskRepository.save(task);
@@ -165,24 +211,17 @@ public class TaskService {
     public void deleteTaskFromProject(Long projectId, Long taskId) {
         LOG.debug("Request to delete task {} from project {}", taskId, projectId);
 
-        // Verificar que el proyecto existe
+        // Validar proyecto y permisos
         Project project = projectRepository.findById(projectId)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
-
-        // Validar permisos (ADMIN, OWNER o MODERADOR)
         validateAdminOrProjectOwnerOrModerator(projectId);
 
         // Obtener y validar la tarea
-        Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new BadRequestAlertException("Task not found", "task", "idnotfound"));
-
-        // Verificar pertenencia al proyecto
+        Task task = getTaskById(taskId);
         if (task.getParentProject() == null || !task.getParentProject().getId().equals(projectId)) {
             throw new BadRequestAlertException("Task does not belong to project", ENTITY_NAME, "invalid.task");
         }
-
-        // Validar reglas de negocio
-        if (task.getArchived() != null && task.getArchived()) {
+        if (task.getArchived()) {
             throw new BadRequestAlertException("Cannot delete archived tasks", ENTITY_NAME, "archived.task");
         }
 
@@ -195,7 +234,6 @@ public class TaskService {
     public List<TaskDTO> findAllTasksByProjectId(Long projectId) {
         LOG.debug("Request to get all tasks for project {}", projectId);
 
-        // Verificar que el proyecto existe
         if (!projectRepository.existsById(projectId)) {
             throw new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound");
         }
@@ -206,30 +244,158 @@ public class TaskService {
             .collect(Collectors.toList());
     }
 
-//    @Transactional
-//    public void assignTask(Long taskId, String userLogin) {
-//        LOG.debug("Request to assign task {} to user {}", taskId, userLogin);
-//
-//        // Validar que la tarea existe
-//        Task task = taskRepository.findById(taskId)
-//            .orElseThrow(() -> new BadRequestAlertException("Task not found", "task", "idnotfound"));
-//
-//        // Validar permisos (ADMIN, OWNER o MODERADOR del grupo de trabajo)
-//        validateAdminOrProjectOwnerOrModerator(task.getParentProject().getId());
-//
-//        // Validar que el usuario existe
-//        User user = userRepository.findOneByLogin(userLogin)
-//            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "usernotfound"));
-//
-//        // Validar que el usuario es miembro del grupo de trabajo
-//        if (!workGroupMembershipRepository.existsByWorkGroupAndUser(task.getWorkGroup(), user)) {
-//            throw new BadRequestAlertException("User is not member of work group", ENTITY_NAME, "not.member");
-//        }
-//
-//        // Asignar tarea
-//        task.setAssignedTo(user);
-//        task.setUpdateTime(Instant.now());
-//        taskRepository.save(task);
-//        LOG.info("Task {} assigned to user {}", taskId, userLogin);
-//    }
+    // ========== MÉTODOS DE ASIGNACIÓN ==========
+
+    public void assignTask(Long taskId, String userLogin) {
+        LOG.debug("Request to assign user {} to task {}", userLogin, taskId);
+
+        Task task = getTaskById(taskId);
+        validateTaskNotArchived(task);
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        User user = getUserByLogin(userLogin);
+
+        // Verificar que el usuario pertenece al grupo de trabajo
+        if (!workGroupMembershipRepository.existsByWorkGroupAndUser(task.getWorkGroup(), user)) {
+            throw new IllegalStateException("User does not belong to the task's work group");
+        }
+
+        // Verificar que no está ya asignado
+        if (taskAssignmentRepository.existsByTaskAndUser(task, user)) {
+            throw new IllegalStateException("User is already assigned to this task");
+        }
+
+        TaskAssignment assignment = new TaskAssignment();
+        assignment.setTask(task);
+        assignment.setUser(user);
+        assignment.setAssignedAt(Instant.now());
+        taskAssignmentRepository.save(assignment);
+    }
+
+    public void unassignTask(Long taskId, String userLogin) {
+        LOG.debug("Request to unassign user {} from task {}", userLogin, taskId);
+
+        Task task = getTaskById(taskId);
+        validateTaskNotArchived(task);
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        User user = getUserByLogin(userLogin);
+        TaskAssignment assignment = taskAssignmentRepository.findByTaskAndUser(task, user)
+            .orElseThrow(() -> new RuntimeException("Assignment not found" ));
+
+        taskAssignmentRepository.delete(assignment);
+    }
+
+    public List<TaskAssignmentDTO> getTaskAssignments(Long taskId) {
+        LOG.debug("Request to get assignments for task {}", taskId);
+
+        Task task = getTaskById(taskId);
+
+        return taskAssignmentRepository.findByTask(task).stream()
+            .map(taskAssignmentMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
+    public CommentDTO addCommentToTask(Long taskId, String content) {
+        LOG.debug("Request to add comment to task {}: {}", taskId, content);
+
+        Task task = getTaskById(taskId);
+        validateTaskNotArchived(task);
+
+        // Verificar que el usuario actual es miembro del grupo de trabajo
+        String currentUserLogin = getCurrentUserLogin();
+        if (workGroupMembershipRepository.existsByWorkGroupAndUserLogin(
+            task.getWorkGroup(), currentUserLogin)) {
+            throw new AccessDeniedException("User is not member of task's work group");
+        }
+
+        User author = getUserByLogin(currentUserLogin);
+
+        Comment comment = new Comment();
+        comment.setContent(content);
+        comment.setCreateTime(Instant.now());
+        comment.setTask(task);
+        comment.setAuthor(author);
+
+        Comment savedComment = commentRepository.save(comment);
+        return commentMapper.toDto(savedComment);
+    }
+
+    public List<CommentDTO> getTaskComments(Long taskId) {
+        LOG.debug("Request to get comments for task {}", taskId);
+
+        Task task = getTaskById(taskId);
+
+        // Verificar que el usuario actual es miembro del grupo de trabajo
+        String currentUserLogin = getCurrentUserLogin();
+        if (workGroupMembershipRepository.existsByWorkGroupAndUserLogin(
+            task.getWorkGroup(), currentUserLogin)) {
+            throw new AccessDeniedException("User is not member of task's work group");
+        }
+
+        return commentRepository.findByTaskOrderByCreateTimeDesc(task).stream()
+            .map(commentMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
+
+
+    // ========== MÉTODOS DE ESTADO Y PRIORIDAD ==========
+
+    public void changePriority(Long taskId, String priorityName) {
+        LOG.debug("Request to change priority of task {} to {}", taskId, priorityName);
+
+        Task task = getTaskById(taskId);
+        validateTaskNotArchived(task);
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        Priority priority = priorityRepository.findByName(priorityName)
+            .orElseThrow(() -> new RuntimeException("Priority not found: " + priorityName));
+
+        task.setPriority(priority);
+        task.setUpdateTime(Instant.now());
+        taskRepository.save(task);
+    }
+
+    public void changeStatus(Long taskId, String statusName) {
+        LOG.debug("Request to change status of task {} to {}", taskId, statusName);
+
+        Task task = getTaskById(taskId);
+        validateTaskNotArchived(task);
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        TaskStatusCatalog status = statusRepository.findByName(statusName)
+            .orElseThrow(() -> new RuntimeException("Status not found: " + statusName));
+
+        task.setStatus(status);
+        task.setUpdateTime(Instant.now());
+        taskRepository.save(task);
+    }
+
+    // ========== MÉTODOS DE ARCHIVADO ==========
+
+    public void archiveTask(Long taskId) {
+        LOG.debug("Request to archive task {}", taskId);
+
+        Task task = getTaskById(taskId);
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        if (!"DONE".equals(task.getStatus().getName())) {
+            throw new IllegalStateException("Only DONE tasks can be archived");
+        }
+
+        task.setArchived(true);
+        task.setArchivedDate(ZonedDateTime.now());
+        taskRepository.save(task);
+    }
+
+    public void deleteArchivedTask(Long taskId) {
+        LOG.debug("Request to delete archived task {}", taskId);
+
+        Task task = taskRepository.findByIdAndArchivedTrue(taskId)
+            .orElseThrow(() -> new RuntimeException("Archived task not found with id: " + taskId));
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        taskRepository.delete(task);
+    }
 }

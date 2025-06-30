@@ -62,16 +62,23 @@ public class PriorityService {
      * @param priorityDTO the entity to save.
      * @return the persisted entity.
      */
-    public PriorityDTO update(CreatePriorityDTO priorityDTO) {
-        LOG.debug("Request to update Priority : {}", priorityDTO);
+    public PriorityDTO update(Long id, CreatePriorityDTO priorityDTO) {
+        LOG.debug("Request to update Priority ID {} with data: {}", id, priorityDTO);
 
-        Priority priority = new Priority()
+        // 1. Buscar la entidad existente
+        Priority existingPriority = priorityRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Priority not found with id: " + id));
+
+        // 2. Actualizar solo los campos permitidos
+        existingPriority
             .name(priorityDTO.getName())
             .description(priorityDTO.getDescription())
-            .updatedAt(java.time.Instant.now());
+            .updatedAt(Instant.now());
 
-        priority = priorityRepository.save(priority);
-        return priorityMapper.toDto(priority);
+
+        // 4. Guardar los cambios
+        Priority updatedPriority = priorityRepository.save(existingPriority);
+        return priorityMapper.toDto(updatedPriority);
     }
 
     /**

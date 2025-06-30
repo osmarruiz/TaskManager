@@ -2,6 +2,9 @@ package com.dcmc.apps.taskmanager.repository;
 
 import com.dcmc.apps.taskmanager.domain.Comment;
 import java.util.List;
+import java.util.Optional;
+
+import com.dcmc.apps.taskmanager.domain.Task;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +16,6 @@ import org.springframework.stereotype.Repository;
 public interface CommentRepository extends JpaRepository<Comment, Long>, JpaSpecificationExecutor<Comment> {
     @Query("select comment from Comment comment where comment.author.login = ?#{authentication.name}")
     List<Comment> findByAuthorIsCurrentUser();
+
+    Optional<Comment> findByTaskOrderByCreateTimeDesc(Task task);
 }

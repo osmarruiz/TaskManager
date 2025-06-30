@@ -200,6 +200,14 @@ public class TaskCriteria implements Serializable, Criteria {
         return archived;
     }
 
+    public TaskCriteria withArchived(Boolean archived) {
+        if (this.archived == null) {
+            this.archived = new BooleanFilter();
+        }
+        this.archived.setEquals(archived);
+        return this;
+    }
+
     public void setArchived(BooleanFilter archived) {
         this.archived = archived;
     }

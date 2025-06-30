@@ -96,7 +96,7 @@ public class PriorityResource {
         LOG.debug("REST request to update Priority : {}, {}", id, priorityDTO);
 
 
-        PriorityDTO result = priorityService.update(priorityDTO);
+        PriorityDTO result = priorityService.update(id, priorityDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
             .body(result);

@@ -180,7 +180,7 @@ public class WorkGroupService {
         // Obtener el OWNER actual
         WorkGroupMembership currentOwner = workGroupMembershipRepository
             .findByWorkGroupAndRole(workGroup, Role.OWNER)
-            .orElseThrow(() -> new BadRequestAlertException("Current owner not found", "workGroup", "noowner"));
+            .orElseThrow(() -> new BadRequestAlertException("Current owner not found", "workGroup", "no owner"));
 
         // Verificar si el nuevo OWNER ya es miembro
         Optional<WorkGroupMembership> newOwnerMembershipOpt = workGroupMembershipRepository

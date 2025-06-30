@@ -4,6 +4,9 @@ import com.dcmc.apps.taskmanager.repository.TaskRepository;
 import com.dcmc.apps.taskmanager.service.TaskQueryService;
 import com.dcmc.apps.taskmanager.service.TaskService;
 import com.dcmc.apps.taskmanager.service.criteria.TaskCriteria;
+import com.dcmc.apps.taskmanager.service.dto.CommentDTO;
+import com.dcmc.apps.taskmanager.service.dto.CreateTaskDTO;
+import com.dcmc.apps.taskmanager.service.dto.TaskAssignmentDTO;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -23,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import tech.jhipster.service.filter.BooleanFilter;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -83,28 +87,18 @@ public class TaskResource {
      * or with status {@code 500 (Internal Server Error)} if the taskDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody TaskDTO taskDTO
+        @Valid @RequestBody CreateTaskDTO taskDTO
     ) throws URISyntaxException {
         LOG.debug("REST request to update Task : {}, {}", id, taskDTO);
-        if (taskDTO.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        }
-        if (!Objects.equals(id, taskDTO.getId())) {
-            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
-        }
 
-        if (!taskRepository.existsById(id)) {
-            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
-        }
 
-        taskDTO = taskService.update(taskDTO);
+        TaskDTO result = taskService.update(id, taskDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, taskDTO.getId().toString()))
-            .body(taskDTO);
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -158,6 +152,8 @@ public class TaskResource {
     ) {
         LOG.debug("REST request to get Tasks by criteria: {}", criteria);
 
+        criteria.withArchived(false);
+
         Page<TaskDTO> page = taskQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -189,6 +185,14 @@ public class TaskResource {
         return ResponseUtil.wrapOrNotFound(taskDTO);
     }
 
+    @GetMapping("/{id}/assignments")
+    public ResponseEntity<List<TaskAssignmentDTO>> getTaskAssignments(
+        @PathVariable Long taskId) {
+
+        List<TaskAssignmentDTO> assignments = taskService.getTaskAssignments(taskId);
+        return ResponseEntity.ok(assignments);
+    }
+
     /**
      * {@code DELETE  /tasks/:id} : delete the "id" task.
      *
@@ -203,5 +207,88 @@ public class TaskResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @PostMapping("/tasks/{taskId}/comments")
+    public ResponseEntity<CommentDTO> addCommentToTask(
+        @PathVariable Long taskId,
+        @RequestBody String content) {
+
+        LOG.debug("REST request to add comment to task {}: {}", taskId, content);
+        CommentDTO result = taskService.addCommentToTask(taskId, content);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/tasks/{taskId}/comments")
+    public ResponseEntity<List<CommentDTO>> getTaskComments(
+        @PathVariable Long taskId) {
+
+        LOG.debug("REST request to get comments for task {}", taskId);
+        List<CommentDTO> comments = taskService.getTaskComments(taskId);
+        return ResponseEntity.ok(comments);
+    }
+
+    // *******************************************************************************************************************
+
+    @GetMapping("/archived-tasks")
+    public ResponseEntity<List<TaskDTO>> getAllTasksArchived(
+        TaskCriteria criteria,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get Tasks by criteria: {}", criteria);
+
+        criteria.withArchived(true);
+
+        Page<TaskDTO> page = taskQueryService.findByCriteria(criteria, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    @DeleteMapping("/archived-tasks/{id}")
+    public ResponseEntity<Void> deleteArchivedTask(@PathVariable Long id) {
+        taskService.deleteArchivedTask(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/assign/{userLogin}")
+    public ResponseEntity<Void> assignTask(
+        @PathVariable Long id,
+        @PathVariable String userLogin
+    ) {
+        taskService.assignTask(id, userLogin);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/unassign/{userLogin}")
+    public ResponseEntity<Void> unassignTask(
+        @PathVariable Long id,
+        @PathVariable String userLogin
+    ) {
+        taskService.unassignTask(id, userLogin);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/priority")
+    public ResponseEntity<Void> changePriority(
+        @PathVariable Long id,
+        @RequestParam String priority
+    ) {
+        taskService.changePriority(id, priority);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Void> changeStatus(
+        @PathVariable Long id,
+        @RequestParam String status
+    ) {
+        taskService.changeStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/archive")
+    public ResponseEntity<Void> archiveTask(@PathVariable Long id) {
+        taskService.archiveTask(id);
+        return ResponseEntity.ok().build();
     }
 }
