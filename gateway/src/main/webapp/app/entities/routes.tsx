@@ -6,6 +6,7 @@ import TaskList from '../modules/task/TaskList';
 import ProjectList from '../modules/project/ProjectList';
 import WorkGroupList from '../modules/workgroup/WorkGroupList';
 import PriorityList from '../modules/priority/PriorityList';
+import StatusList from '../modules/status/StatusList';
 
 /* jhipster-needle-add-route-import - JHipster will add routes here */
 
@@ -19,6 +20,7 @@ export default () => {
         <Route path="proyectos" element={<ProjectList />} />
         <Route path="grupos" element={<WorkGroupList />} />
         <Route path="prioridades" element={<PriorityList />} />
+        <Route path="estados" element={<StatusList />} />
       </ErrorBoundaryRoutes>
     </div>
   );

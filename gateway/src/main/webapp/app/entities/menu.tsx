@@ -20,6 +20,9 @@ const EntitiesMenu = () => {
       <MenuItem icon="asterisk" to="/prioridades">
         Prioridades
       </MenuItem>
+      <MenuItem icon="asterisk" to="/estados">
+        Estados de Tarea
+      </MenuItem>
     </>
   );
 };
