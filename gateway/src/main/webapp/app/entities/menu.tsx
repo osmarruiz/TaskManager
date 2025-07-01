@@ -14,6 +14,9 @@ const EntitiesMenu = () => {
       <MenuItem icon="asterisk" to="/proyectos">
         Proyectos
       </MenuItem>
+      <MenuItem icon="asterisk" to="/grupos">
+        Grupos de trabajo
+      </MenuItem>
     </>
   );
 };
