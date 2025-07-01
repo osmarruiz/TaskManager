@@ -11,6 +11,9 @@ const EntitiesMenu = () => {
       <MenuItem icon="asterisk" to="/tareas">
         Tareas
       </MenuItem>
+      <MenuItem icon="asterisk" to="/proyectos">
+        Proyectos
+      </MenuItem>
     </>
   );
 };
