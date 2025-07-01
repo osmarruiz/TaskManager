@@ -5,6 +5,7 @@ import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 import TaskList from '../modules/task/TaskList';
 import ProjectList from '../modules/project/ProjectList';
 import WorkGroupList from '../modules/workgroup/WorkGroupList';
+import PriorityList from '../modules/priority/PriorityList';
 
 /* jhipster-needle-add-route-import - JHipster will add routes here */
 
@@ -17,6 +18,7 @@ export default () => {
         <Route path="tareas" element={<TaskList />} />
         <Route path="proyectos" element={<ProjectList />} />
         <Route path="grupos" element={<WorkGroupList />} />
+        <Route path="prioridades" element={<PriorityList />} />
       </ErrorBoundaryRoutes>
     </div>
   );

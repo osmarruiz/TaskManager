@@ -115,7 +115,7 @@ const ProjectDetail: React.FC<Props> = ({ id, onBack }) => {
             <span>
               {t.title} - {t.status?.name}
             </span>
-            <button className="btn btn-danger btn-sm" onClick={() => handleRemoveTask(t.id!)}>
+            <button className="btn btn-danger btn-sm" onClick={() => handleRemoveTask(t.id)}>
               Quitar
             </button>
           </li>
