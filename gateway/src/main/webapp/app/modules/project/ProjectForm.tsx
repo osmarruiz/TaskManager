@@ -3,6 +3,8 @@ import { getWorkGroups } from '../../shared/util/work-group-api';
 import { createProject, updateProject } from '../../shared/util/project-api';
 import { Project } from '../../shared/model/project.model';
 import { WorkGroup } from '../../shared/model/work-group.model';
+import { showApiError, showSuccessMessage, ERROR_MESSAGES, showValidationErrors } from '../../shared/util/error-utils';
+import { validateRequiredFields } from '../../shared/util/api-utils';
 
 interface CreateProjectDTO {
   title: string;
@@ -22,13 +24,17 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
   const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getWorkGroups().then(data => {
-      setWorkGroups(data);
-      setLoading(false);
-    });
+    getWorkGroups()
+      .then(data => {
+        setWorkGroups(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        showApiError(error, 'Error al cargar grupos de trabajo');
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -54,16 +60,38 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
     return value.length === 16 ? value + ':00Z' : value + 'Z';
   };
 
+  const validateForm = (): boolean => {
+    const requiredFields = {
+      title: form.title,
+      description: form.description,
+      workGroup: form.workGroup,
+    };
+
+    const errors = validateRequiredFields(requiredFields);
+
+    if (errors.length > 0) {
+      showValidationErrors(errors);
+      return false;
+    }
+
+    if (!form.workGroup) {
+      showApiError({ message: 'Debe seleccionar un grupo de trabajo' }, 'Error de validación');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setSaving(true);
-    setError(null);
+
     try {
-      if (!form.workGroup) {
-        setError('Debe seleccionar un grupo de trabajo');
-        setSaving(false);
-        return;
-      }
       const payload: CreateProjectDTO = {
         title: form.title || '',
         description: form.description || '',
@@ -71,14 +99,19 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
         endDate: toIsoStringWithTZ(form.endDate),
         workGroupId: form.workGroup.id,
       };
+
       if (projectToEdit && projectToEdit.id) {
         await updateProject(projectToEdit.id, payload as any);
+        showSuccessMessage('Proyecto actualizado exitosamente');
       } else {
         await createProject(payload as any);
+        showSuccessMessage('Proyecto creado exitosamente');
       }
+
       onSuccess();
-    } catch (err) {
-      setError('Error al guardar el proyecto');
+    } catch (error) {
+      // El error ya se maneja en el interceptor de axios
+      console.error('Error en formulario:', error);
     } finally {
       setSaving(false);
     }
@@ -89,13 +122,12 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
   return (
     <form onSubmit={handleSubmit}>
       <h3>{projectToEdit ? 'Editar Proyecto' : 'Crear Proyecto'}</h3>
-      {error && <div className="alert alert-danger">{error}</div>}
       <div className="mb-3">
-        <label>Título</label>
+        <label>Título *</label>
         <input name="title" className="form-control" required value={form.title || ''} onChange={handleChange} />
       </div>
       <div className="mb-3">
-        <label>Descripción</label>
+        <label>Descripción *</label>
         <textarea name="description" className="form-control" required value={form.description || ''} onChange={handleChange} />
       </div>
       <div className="mb-3">
@@ -107,7 +139,7 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
         <input name="endDate" type="datetime-local" className="form-control" value={form.endDate || ''} onChange={handleChange} />
       </div>
       <div className="mb-3">
-        <label>Grupo de trabajo</label>
+        <label>Grupo de trabajo *</label>
         <select
           name="workGroup"
           className="form-control"

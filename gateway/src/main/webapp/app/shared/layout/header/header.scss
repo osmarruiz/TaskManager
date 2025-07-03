@@ -131,3 +131,47 @@ User Info styles
     }
   }
 }
+
+/* ==========================================================================
+Dropdown Menu styles
+========================================================================== */
+.dropdown-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 0.5rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+
+  i {
+    color: #495057;
+  }
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: #dee2e6;
+}
+
+/* Estilos para los elementos del menú de entidades */
+#entity-menu {
+  .dropdown-menu {
+    min-width: 200px;
+    padding: 0;
+
+    .dropdown-item {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #f8f9fa;
+
+      &:hover {
+        background-color: #e9ecef;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+}

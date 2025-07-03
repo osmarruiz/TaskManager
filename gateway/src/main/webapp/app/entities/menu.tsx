@@ -14,21 +14,40 @@ const EntitiesMenu = () => {
     <>
       {/* prettier-ignore */}
       {/* jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here */}
-      <MenuItem icon="asterisk" to="/tareas">
-        Tareas
-      </MenuItem>
-      <MenuItem icon="asterisk" to="/proyectos">
-        Proyectos
-      </MenuItem>
-      <MenuItem icon="asterisk" to="/grupos">
+
+      {/* Encabezado del primer grupo */}
+      <div className="dropdown-header">
+        <i className="fas fa-tasks me-2"></i>
+        Gestión Principal
+      </div>
+
+      <MenuItem icon="users" to="/grupos">
         Grupos de trabajo
       </MenuItem>
+      <MenuItem icon="project-diagram" to="/proyectos">
+        Proyectos
+      </MenuItem>
+      {/* Submenú de Gestión Principal */}
+      <MenuItem icon="tasks" to="/tareas">
+        Tareas
+      </MenuItem>
+
+      {/* Separador visual */}
+      <hr className="dropdown-divider" />
+
+      {/* Encabezado del segundo grupo */}
+      <div className="dropdown-header">
+        <i className="fas fa-cogs me-2"></i>
+        Configuración
+      </div>
+
+      {/* Submenú de Configuración */}
       {isAdmin && (
-        <MenuItem icon="asterisk" to="/prioridades">
+        <MenuItem icon="cog" to="/prioridades">
           Prioridades
         </MenuItem>
       )}
-      <MenuItem icon="asterisk" to="/estados">
+      <MenuItem icon="list-check" to="/estados">
         Estados de Tarea
       </MenuItem>
     </>
