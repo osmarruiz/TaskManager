@@ -5,7 +5,7 @@ class TaskManagerApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'http://localhost:8080/services/taskmanager',
+      baseURL: '/services/taskmanager/api',
     });
   }
 }

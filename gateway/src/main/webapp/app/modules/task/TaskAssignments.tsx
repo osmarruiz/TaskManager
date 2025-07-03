@@ -17,11 +17,25 @@ const TaskAssignments: React.FC<Props> = ({ taskId }) => {
 
   const loadAssignments = () => {
     setLoading(true);
-    Promise.all([getTaskAssignments(taskId), getUsers()]).then(([asgs, usrs]) => {
-      setAssignments(asgs);
-      setUsers(usrs);
-      setLoading(false);
-    });
+    Promise.all([
+      getTaskAssignments(taskId).catch(err => {
+        console.error('Error loading task assignments:', err);
+        return [];
+      }),
+      getUsers().catch(err => {
+        console.error('Error loading users:', err);
+        return [];
+      }),
+    ])
+      .then(([asgs, usrs]) => {
+        setAssignments(asgs);
+        setUsers(usrs);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error in loadAssignments:', err);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

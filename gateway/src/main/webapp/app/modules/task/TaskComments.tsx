@@ -14,10 +14,16 @@ const TaskComments: React.FC<Props> = ({ taskId }) => {
 
   const loadComments = () => {
     setLoading(true);
-    getTaskComments(taskId).then(data => {
-      setComments(data);
-      setLoading(false);
-    });
+    getTaskComments(taskId)
+      .then(data => {
+        setComments(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error loading comments:', err);
+        setComments([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

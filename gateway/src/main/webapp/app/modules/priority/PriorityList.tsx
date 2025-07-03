@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getPriorities, deletePriority } from '../../shared/util/priority-api';
+import { getPriorities, deletePriority, updatePriorityVisibility } from '../../shared/util/priority-api';
 import { Priority } from '../../shared/model/priority.model';
 import PriorityForm from './PriorityForm';
 
@@ -26,6 +26,11 @@ const PriorityList: React.FC = () => {
       await deletePriority(id);
       loadPriorities();
     }
+  };
+
+  const handleVisibility = async (id: number, visible: boolean) => {
+    await updatePriorityVisibility(id, visible);
+    loadPriorities();
   };
 
   if (loading) return <div>Cargando prioridades...</div>;
@@ -71,11 +76,20 @@ const PriorityList: React.FC = () => {
               <td>{priority.id}</td>
               <td>{priority.name}</td>
               <td>{priority.description}</td>
-              <td>{priority.visible ? 'Sí' : 'No'}</td>
               <td>
-                <button className="btn btn-info btn-sm me-2">Ver</button>
+                <span className={`badge ${priority.visible ? 'bg-success' : 'bg-secondary'}`}>
+                  {priority.visible ? 'Visible' : 'Oculta'}
+                </span>
+              </td>
+              <td>
                 <button className="btn btn-primary btn-sm me-2" onClick={() => setPriorityToEdit(priority)}>
                   Editar
+                </button>
+                <button
+                  className={`btn btn-sm me-2 ${priority.visible ? 'btn-warning' : 'btn-success'}`}
+                  onClick={() => handleVisibility(priority.id, !priority.visible)}
+                >
+                  {priority.visible ? 'Ocultar' : 'Mostrar'}
                 </button>
                 <button className="btn btn-danger btn-sm" onClick={() => handleDelete(priority.id)}>
                   Eliminar

@@ -2,6 +2,8 @@ import React from 'react';
 import { Route } from 'react-router';
 
 import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
+import PrivateRoute from 'app/shared/auth/private-route';
+import { AUTHORITIES } from 'app/config/constants';
 import TaskList from '../modules/task/TaskList';
 import ProjectList from '../modules/project/ProjectList';
 import WorkGroupList from '../modules/workgroup/WorkGroupList';
@@ -19,7 +21,14 @@ export default () => {
         <Route path="tareas" element={<TaskList />} />
         <Route path="proyectos" element={<ProjectList />} />
         <Route path="grupos" element={<WorkGroupList />} />
-        <Route path="prioridades" element={<PriorityList />} />
+        <Route
+          path="prioridades"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
+              <PriorityList />
+            </PrivateRoute>
+          }
+        />
         <Route path="estados" element={<StatusList />} />
       </ErrorBoundaryRoutes>
     </div>

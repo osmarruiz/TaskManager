@@ -2,10 +2,8 @@ package com.dcmc.apps.taskmanager.service.mapper;
 
 import com.dcmc.apps.taskmanager.domain.TaskStatusCatalog;
 import com.dcmc.apps.taskmanager.domain.User;
-import com.dcmc.apps.taskmanager.domain.WorkGroup;
 import com.dcmc.apps.taskmanager.service.dto.TaskStatusCatalogDTO;
 import com.dcmc.apps.taskmanager.service.dto.UserDTO;
-import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
 import org.mapstruct.*;
 
 /**

@@ -2,7 +2,7 @@ import './header.scss';
 
 import React, { useState } from 'react';
 
-import { Collapse, Nav, Navbar, NavbarToggler } from 'reactstrap';
+import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import LoadingBar from 'react-redux-loading-bar';
 
 import { AccountMenu, AdminMenu, EntitiesMenu } from '../menus';
@@ -14,6 +14,7 @@ export interface IHeaderProps {
   ribbonEnv: string;
   isInProduction: boolean;
   isOpenAPIEnabled: boolean;
+  account?: any; // Añadimos la información de la cuenta
 }
 
 const Header = (props: IHeaderProps) => {
@@ -27,6 +28,29 @@ const Header = (props: IHeaderProps) => {
     ) : null;
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  const renderUserInfo = () => {
+    if (props.isAuthenticated && props.account) {
+      const authorities = props.account.authorities || [];
+      const roles = authorities.join(', ');
+
+      return (
+        <NavItem className="user-info d-flex align-items-center">
+          <NavLink className="text-light">
+            <span className="user-name">
+              <i className="fas fa-user me-1"></i>
+              {props.account.login}
+            </span>
+            <span className="badge bg-secondary user-roles">
+              <i className="fas fa-shield-alt me-1"></i>
+              {roles || 'Usuario'}
+            </span>
+          </NavLink>
+        </NavItem>
+      );
+    }
+    return null;
+  };
 
   /* jhipster-needle-add-element-to-menu - JHipster will add new menu items here */
 
@@ -42,6 +66,7 @@ const Header = (props: IHeaderProps) => {
             <Home />
             {props.isAuthenticated && <EntitiesMenu />}
             {props.isAuthenticated && props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />}
+            {renderUserInfo()}
             <AccountMenu isAuthenticated={props.isAuthenticated} />
           </Nav>
         </Collapse>

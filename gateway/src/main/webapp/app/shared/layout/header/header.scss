@@ -83,3 +83,51 @@ Navbar styles
   top: 0;
   z-index: 1031;
 }
+
+/* ==========================================================================
+User Info styles
+========================================================================== */
+.user-info {
+  .nav-link {
+    color: $header-color !important;
+    padding: 0.5rem 1rem;
+
+    &:hover {
+      color: $header-color-hover !important;
+    }
+  }
+
+  .user-name {
+    font-weight: 500;
+    margin-right: 0.5rem;
+  }
+
+  .user-roles {
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Responsive adjustments for user info */
+@media (max-width: 768px) {
+  .user-info {
+    .nav-link {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .user-name {
+      margin-right: 0.25rem;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+}

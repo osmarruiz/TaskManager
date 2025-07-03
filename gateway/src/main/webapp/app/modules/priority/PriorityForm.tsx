@@ -55,10 +55,6 @@ const PriorityForm: React.FC<Props> = ({ onSuccess, priorityToEdit }) => {
         <label>Descripción</label>
         <textarea name="description" className="form-control" value={form.description || ''} onChange={handleChange} />
       </div>
-      <div className="mb-3 form-check">
-        <input type="checkbox" name="visible" className="form-check-input" checked={!!form.visible} onChange={handleChange} />
-        <label className="form-check-label">Visible</label>
-      </div>
       <button className="btn btn-success" type="submit" disabled={saving}>
         {saving ? 'Guardando...' : 'Guardar'}
       </button>

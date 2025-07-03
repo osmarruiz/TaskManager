@@ -4,6 +4,14 @@ import { createProject, updateProject } from '../../shared/util/project-api';
 import { Project } from '../../shared/model/project.model';
 import { WorkGroup } from '../../shared/model/work-group.model';
 
+interface CreateProjectDTO {
+  title: string;
+  description: string;
+  startDate?: string;
+  endDate?: string;
+  workGroupId: number;
+}
+
 interface Props {
   onSuccess: () => void;
   projectToEdit?: Project | null;
@@ -37,15 +45,36 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
     setForm(prev => ({ ...prev, workGroup: grupo }));
   };
 
+  const toIsoStringWithTZ = (value: string | undefined) => {
+    if (!value) return undefined;
+    // Si ya tiene zona horaria, no modificar
+    if (value.includes('Z') || value.includes('+')) return value;
+    // Si viene de input datetime-local: 'YYYY-MM-DDTHH:mm'
+    // Convertir a 'YYYY-MM-DDTHH:mm:00Z'
+    return value.length === 16 ? value + ':00Z' : value + 'Z';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     try {
+      if (!form.workGroup) {
+        setError('Debe seleccionar un grupo de trabajo');
+        setSaving(false);
+        return;
+      }
+      const payload: CreateProjectDTO = {
+        title: form.title || '',
+        description: form.description || '',
+        startDate: toIsoStringWithTZ(form.startDate),
+        endDate: toIsoStringWithTZ(form.endDate),
+        workGroupId: form.workGroup.id,
+      };
       if (projectToEdit && projectToEdit.id) {
-        await updateProject(projectToEdit.id, form as Project);
+        await updateProject(projectToEdit.id, payload as any);
       } else {
-        await createProject(form as Project);
+        await createProject(payload as any);
       }
       onSuccess();
     } catch (err) {
