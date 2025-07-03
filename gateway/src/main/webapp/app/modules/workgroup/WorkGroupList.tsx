@@ -82,12 +82,12 @@ const WorkGroupList: React.FC = () => {
                 <button className="btn btn-info btn-sm me-2" onClick={() => setSelectedGroupId(group.id)}>
                   Ver
                 </button>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => setGroupToEdit(group)}>
+                {/* <button className="btn btn-primary btn-sm me-2" onClick={() => setGroupToEdit(group)}>
                   Editar
                 </button>
                 <button className="btn btn-danger btn-sm" onClick={() => handleDelete(group.id)}>
                   Eliminar
-                </button>
+                </button> */}
               </td>
             </tr>
           ))}

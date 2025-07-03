@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createStatus, updateStatus } from '../../shared/util/status-api';
 import { TaskStatusCatalog, CreateTaskStatusCatalog } from '../../shared/model/status.model';
+import { showApiError, showSuccessMessage, ERROR_MESSAGES } from '../../shared/util/error-utils';
+import { validateRequiredFields } from '../../shared/util/api-utils';
 
 interface Props {
   onSuccess: () => void;
@@ -10,7 +12,6 @@ interface Props {
 const StatusForm: React.FC<Props> = ({ onSuccess, statusToEdit }) => {
   const [form, setForm] = useState<CreateTaskStatusCatalog>({ name: '', description: '' });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (statusToEdit) setForm({ name: statusToEdit.name, description: statusToEdit.description });
@@ -21,19 +22,44 @@ const StatusForm: React.FC<Props> = ({ onSuccess, statusToEdit }) => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = (): boolean => {
+    const requiredFields = {
+      name: form.name,
+    };
+
+    const errors = validateRequiredFields(requiredFields);
+
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        showApiError({ message: error }, 'Error de validación');
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setSaving(true);
-    setError(null);
+
     try {
       if (statusToEdit && statusToEdit.id) {
         await updateStatus(statusToEdit.id, form);
+        showSuccessMessage('Estado actualizado exitosamente');
       } else {
         await createStatus(form);
+        showSuccessMessage('Estado creado exitosamente');
       }
       onSuccess();
-    } catch (err) {
-      setError('Error al guardar el estado');
+    } catch (error) {
+      // El error ya se maneja en el interceptor de axios
+      console.error('Error en formulario:', error);
     } finally {
       setSaving(false);
     }
@@ -42,9 +68,8 @@ const StatusForm: React.FC<Props> = ({ onSuccess, statusToEdit }) => {
   return (
     <form onSubmit={handleSubmit}>
       <h3>{statusToEdit ? 'Editar Estado' : 'Crear Estado'}</h3>
-      {error && <div className="alert alert-danger">{error}</div>}
       <div className="mb-3">
-        <label>Nombre</label>
+        <label>Nombre *</label>
         <input name="name" className="form-control" required value={form.name} onChange={handleChange} />
       </div>
       <div className="mb-3">

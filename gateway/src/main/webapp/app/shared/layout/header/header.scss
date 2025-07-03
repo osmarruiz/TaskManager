@@ -175,3 +175,35 @@ Dropdown Menu styles
     }
   }
 }
+
+/* ==========================================================================
+Access Denied styles
+========================================================================== */
+.access-denied-card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 8px;
+
+  .card-header {
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 600;
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  .alert {
+    border-radius: 6px;
+    border: none;
+  }
+
+  .fa-lock {
+    opacity: 0.6;
+  }
+
+  .text-muted {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
