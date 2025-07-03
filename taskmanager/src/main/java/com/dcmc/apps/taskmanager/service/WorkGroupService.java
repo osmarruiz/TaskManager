@@ -8,10 +8,7 @@ import com.dcmc.apps.taskmanager.repository.UserRepository;
 import com.dcmc.apps.taskmanager.repository.WorkGroupMembershipRepository;
 import com.dcmc.apps.taskmanager.repository.WorkGroupRepository;
 import com.dcmc.apps.taskmanager.security.SecurityUtils;
-import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupDTO;
-import com.dcmc.apps.taskmanager.service.dto.MemberWithRoleDTO;
-import com.dcmc.apps.taskmanager.service.dto.UserWorkGroupDTO;
-import com.dcmc.apps.taskmanager.service.dto.WorkGroupDTO;
+import com.dcmc.apps.taskmanager.service.dto.*;
 import com.dcmc.apps.taskmanager.service.mapper.WorkGroupMapper;
 
 import java.time.Instant;
@@ -159,6 +156,17 @@ public class WorkGroupService {
         validateAdminOrGroupOwner(id);
 
         workGroupRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserWorkGroupDTO> getCurrentUserWorkGroups() {
+        return workGroupMembershipRepository.findByUserIsCurrentUser()
+            .stream()
+            .map(membership -> new UserWorkGroupDTO(
+                membership.getWorkGroup().getId(),
+                membership.getWorkGroup().getName(),
+                membership.getRole()))
+            .collect(Collectors.toList());
     }
 
     @Transactional
@@ -324,6 +332,8 @@ public class WorkGroupService {
         workGroupMembershipRepository.delete(membership);
         updateWorkGroupAudit(workGroup);
     }
+
+
 
     @Transactional(readOnly = true)
     public List<MemberWithRoleDTO> getAllMembersWithRoles(Long workGroupId) {

@@ -17,9 +17,11 @@ interface CreateProjectDTO {
 interface Props {
   onSuccess: () => void;
   projectToEdit?: Project | null;
+  workGroupId?: number;
+  onCancel?: () => void;
 }
 
-const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
+const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit, workGroupId, onCancel }) => {
   const [form, setForm] = useState<Partial<Project>>(projectToEdit || {});
   const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,12 +32,16 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
       .then(data => {
         setWorkGroups(data);
         setLoading(false);
+        if (workGroupId) {
+          const grupo = data.find(g => g.id === workGroupId);
+          if (grupo) setForm(prev => ({ ...prev, workGroup: grupo }));
+        }
       })
       .catch(error => {
         showApiError(error, 'Error al cargar grupos de trabajo');
         setLoading(false);
       });
-  }, []);
+  }, [workGroupId]);
 
   useEffect(() => {
     if (projectToEdit) setForm(projectToEdit);
@@ -146,6 +152,7 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
           required
           value={form.workGroup?.id || ''}
           onChange={e => handleSelectWorkGroup(e.target.value)}
+          disabled={!!workGroupId}
         >
           <option value="">Seleccione</option>
           {workGroups.map(grupo => (
@@ -158,6 +165,11 @@ const ProjectForm: React.FC<Props> = ({ onSuccess, projectToEdit }) => {
       <button className="btn btn-success" type="submit" disabled={saving}>
         {saving ? 'Guardando...' : 'Guardar'}
       </button>
+      {onCancel && (
+        <button type="button" className="btn btn-secondary ms-2" onClick={onCancel}>
+          Cancelar
+        </button>
+      )}
     </form>
   );
 };

@@ -1,7 +1,6 @@
 import React from 'react';
-// eslint-disable-line
 
-import MenuItem from 'app/shared/layout/menus/menu-item'; // eslint-disable-line
+import MenuItem from 'app/shared/layout/menus/menu-item';
 import { useAppSelector } from 'app/config/store';
 import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import { AUTHORITIES } from 'app/config/constants';
@@ -24,13 +23,17 @@ const EntitiesMenu = () => {
       <MenuItem icon="users" to="/grupos">
         Grupos de trabajo
       </MenuItem>
-      <MenuItem icon="project-diagram" to="/proyectos">
-        Proyectos
-      </MenuItem>
-      {/* Submenú de Gestión Principal */}
-      <MenuItem icon="tasks" to="/tareas">
-        Tareas
-      </MenuItem>
+      {isAdmin && (
+        <>
+          <MenuItem icon="project-diagram" to="/proyectos">
+            Proyectos
+          </MenuItem>
+          {/* Submenú de Gestión Principal */}
+          <MenuItem icon="tasks" to="/tareas">
+            Tareas
+          </MenuItem>
+        </>
+      )}
 
       {/* Separador visual */}
       <hr className="dropdown-divider" />

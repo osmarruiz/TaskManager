@@ -38,3 +38,8 @@ export const removeTaskFromProject = async (id: number, taskId: number): Promise
 export const assignUserToProject = async (id: number, userLogin: string): Promise<void> => {
   await taskManagerApi.api.post(`/projects/${id}/assign-user`, { userLogin });
 };
+
+export const getProjectsByWorkGroupId = async (workGroupId: number): Promise<Project[]> => {
+  const response = await taskManagerApi.api.get<Project[]>(`/projects/by-workgroup/${workGroupId}`);
+  return response.data;
+};

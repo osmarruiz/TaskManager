@@ -332,5 +332,12 @@ public class WorkGroupResource {
             .build();
     }
 
+    @GetMapping("/mine")
+    public ResponseEntity<List<UserWorkGroupDTO>> getCurrentUserWorkGroups() {
+        LOG.debug("REST request to get WorkGroups for current user");
+        List<UserWorkGroupDTO> workGroups = workGroupService.getCurrentUserWorkGroups();
+        return ResponseEntity.ok(workGroups);
+    }
+
 
 }

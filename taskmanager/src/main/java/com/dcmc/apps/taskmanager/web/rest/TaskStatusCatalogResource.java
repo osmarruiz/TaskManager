@@ -1,6 +1,9 @@
 package com.dcmc.apps.taskmanager.web.rest;
 
+import com.dcmc.apps.taskmanager.domain.enumeration.Role;
 import com.dcmc.apps.taskmanager.repository.TaskStatusCatalogRepository;
+import com.dcmc.apps.taskmanager.repository.WorkGroupMembershipRepository;
+import com.dcmc.apps.taskmanager.security.SecurityUtils;
 import com.dcmc.apps.taskmanager.service.TaskStatusCatalogQueryService;
 import com.dcmc.apps.taskmanager.service.TaskStatusCatalogService;
 import com.dcmc.apps.taskmanager.service.criteria.TaskStatusCatalogCriteria;
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -48,14 +52,34 @@ public class TaskStatusCatalogResource {
 
     private final TaskStatusCatalogQueryService taskStatusCatalogQueryService;
 
+    private final WorkGroupMembershipRepository workGroupMembershipRepository;
+
     public TaskStatusCatalogResource(
         TaskStatusCatalogService taskStatusCatalogService,
         TaskStatusCatalogRepository taskStatusCatalogRepository,
-        TaskStatusCatalogQueryService taskStatusCatalogQueryService
+        TaskStatusCatalogQueryService taskStatusCatalogQueryService,
+        WorkGroupMembershipRepository workGroupMembershipRepository
     ) {
         this.taskStatusCatalogService = taskStatusCatalogService;
         this.taskStatusCatalogRepository = taskStatusCatalogRepository;
         this.taskStatusCatalogQueryService = taskStatusCatalogQueryService;
+        this.workGroupMembershipRepository = workGroupMembershipRepository;
+    }
+
+    private boolean isCurrentUserAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority("ROLE_ADMIN");
+    }
+
+    private void validateAdminOrGroupOwnerOrModerator() {
+        if (isCurrentUserAdmin()) {
+            return;
+        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow();
+        if (!workGroupMembershipRepository.existsByUserLoginAndRoleIn(
+            currentUserLogin, List.of(Role.OWNER, Role.MODERADOR))) {
+            throw new AccessDeniedException("Insufficient privileges");
+        }
     }
 
     /**
@@ -151,6 +175,9 @@ public class TaskStatusCatalogResource {
     ) {
         LOG.debug("REST request to get TaskStatusCatalogs by criteria: {}", criteria);
 
+        // Validar permisos antes de obtener los datos
+        validateAdminOrGroupOwnerOrModerator();
+
         Page<TaskStatusCatalogDTO> page = taskStatusCatalogQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -165,6 +192,10 @@ public class TaskStatusCatalogResource {
     @GetMapping("/count")
     public ResponseEntity<Long> countTaskStatusCatalogs(TaskStatusCatalogCriteria criteria) {
         LOG.debug("REST request to count TaskStatusCatalogs by criteria: {}", criteria);
+        
+        // Validar permisos antes de contar
+        validateAdminOrGroupOwnerOrModerator();
+        
         return ResponseEntity.ok().body(taskStatusCatalogQueryService.countByCriteria(criteria));
     }
 

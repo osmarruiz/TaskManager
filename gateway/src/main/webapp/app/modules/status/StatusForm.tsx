@@ -57,9 +57,20 @@ const StatusForm: React.FC<Props> = ({ onSuccess, statusToEdit }) => {
         showSuccessMessage('Estado creado exitosamente');
       }
       onSuccess();
-    } catch (error) {
-      // El error ya se maneja en el interceptor de axios
-      console.error('Error en formulario:', error);
+    } catch (error: any) {
+      // Manejar específicamente errores de acceso denegado
+      if (error.response?.status === 403) {
+        showApiError(
+          {
+            message:
+              'No tienes permisos para realizar esta acción. Solo los administradores, propietarios y moderadores de grupos de trabajo pueden gestionar estados de tarea.',
+          },
+          'Acceso Denegado',
+        );
+      } else {
+        // El error ya se maneja en el interceptor de axios para otros casos
+        console.error('Error en formulario:', error);
+      }
     } finally {
       setSaving(false);
     }

@@ -214,7 +214,7 @@ public class ProjectResource {
 
     // Custom endpoint to get projects by work group ID
 
-    @GetMapping("/{workGroupId}")
+    @GetMapping("/by-workgroup/{workGroupId}")
     public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(
         @PathVariable Long workGroupId
     ) {

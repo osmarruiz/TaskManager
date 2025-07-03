@@ -24,7 +24,6 @@ const getFieldErrorsToasts = (fieldErrors: FieldErrorVM[]): ToastMessage[] =>
     return { message: `Error en el campo "${fieldName}"` };
   });
 
-// eslint-disable-next-line complexity
 export default () => next => action => {
   const { error, payload } = action;
 

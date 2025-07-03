@@ -18,8 +18,22 @@ export default () => {
       <ErrorBoundaryRoutes>
         {/* prettier-ignore */}
         {/* jhipster-needle-add-route-path - JHipster will add routes here */}
-        <Route path="tareas" element={<TaskList />} />
-        <Route path="proyectos" element={<ProjectList />} />
+        <Route
+          path="tareas"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
+              <TaskList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="proyectos"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
+              <ProjectList />
+            </PrivateRoute>
+          }
+        />
         <Route path="grupos" element={<WorkGroupList />} />
         <Route
           path="prioridades"
@@ -29,7 +43,14 @@ export default () => {
             </PrivateRoute>
           }
         />
-        <Route path="estados" element={<StatusList />} />
+        <Route
+          path="estados"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.USER]}>
+              <StatusList />
+            </PrivateRoute>
+          }
+        />
       </ErrorBoundaryRoutes>
     </div>
   );
