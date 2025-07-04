@@ -94,7 +94,6 @@ public class TaskResource {
     ) throws URISyntaxException {
         LOG.debug("REST request to update Task : {}, {}", id, taskDTO);
 
-
         TaskDTO result = taskService.update(id, taskDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
@@ -186,9 +185,7 @@ public class TaskResource {
     }
 
     @GetMapping("/{id}/assignments")
-    public ResponseEntity<List<TaskAssignmentDTO>> getTaskAssignments(
-        @PathVariable Long id) {
-
+    public ResponseEntity<List<TaskAssignmentDTO>> getTaskAssignments(@PathVariable Long id) {
         List<TaskAssignmentDTO> assignments = taskService.getTaskAssignments(id);
         return ResponseEntity.ok(assignments);
     }
@@ -210,19 +207,14 @@ public class TaskResource {
     }
 
     @PostMapping("/{taskId}/comments")
-    public ResponseEntity<CommentDTO> addCommentToTask(
-        @PathVariable Long taskId,
-        @RequestBody String content) {
-
+    public ResponseEntity<CommentDTO> addCommentToTask(@PathVariable Long taskId, @RequestBody String content) {
         LOG.debug("REST request to add comment to task {}: {}", taskId, content);
         CommentDTO result = taskService.addCommentToTask(taskId, content);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{taskId}/comments")
-    public ResponseEntity<List<CommentDTO>> getTaskComments(
-        @PathVariable Long taskId) {
-
+    public ResponseEntity<List<CommentDTO>> getTaskComments(@PathVariable Long taskId) {
         LOG.debug("REST request to get comments for task {}", taskId);
         List<CommentDTO> comments = taskService.getTaskComments(taskId);
         return ResponseEntity.ok(comments);
@@ -251,37 +243,25 @@ public class TaskResource {
     }
 
     @PostMapping("/{id}/assign/{userLogin}")
-    public ResponseEntity<Void> assignTask(
-        @PathVariable Long id,
-        @PathVariable String userLogin
-    ) {
+    public ResponseEntity<Void> assignTask(@PathVariable Long id, @PathVariable String userLogin) {
         taskService.assignTask(id, userLogin);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/unassign/{userLogin}")
-    public ResponseEntity<Void> unassignTask(
-        @PathVariable Long id,
-        @PathVariable String userLogin
-    ) {
+    public ResponseEntity<Void> unassignTask(@PathVariable Long id, @PathVariable String userLogin) {
         taskService.unassignTask(id, userLogin);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/priority")
-    public ResponseEntity<Void> changePriority(
-        @PathVariable Long id,
-        @RequestParam String priority
-    ) {
+    public ResponseEntity<Void> changePriority(@PathVariable Long id, @RequestParam String priority) {
         taskService.changePriority(id, priority);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Void> changeStatus(
-        @PathVariable Long id,
-        @RequestParam String status
-    ) {
+    public ResponseEntity<Void> changeStatus(@PathVariable Long id, @RequestParam String status) {
         taskService.changeStatus(id, status);
         return ResponseEntity.ok().build();
     }
@@ -296,5 +276,12 @@ public class TaskResource {
     public ResponseEntity<Void> unarchiveTask(@PathVariable Long id) {
         taskService.unarchiveTask(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/my-tasks")
+    public ResponseEntity<List<TaskDTO>> getMyTasks() {
+        LOG.debug("REST request to get tasks assigned to current user");
+        List<TaskDTO> myTasks = taskService.getTasksAssignedToCurrentUser();
+        return ResponseEntity.ok(myTasks);
     }
 }

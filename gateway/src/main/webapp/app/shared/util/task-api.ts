@@ -40,3 +40,8 @@ export const changeTaskPriority = async (id: number, priority: string): Promise<
 export const changeTaskStatus = async (id: number, status: string): Promise<void> => {
   await taskManagerApi.api.put(`/tasks/${id}/status?status=${encodeURIComponent(status)}`);
 };
+
+export const getMyTasks = async (): Promise<Task[]> => {
+  const response = await taskManagerApi.api.get<Task[]>('/tasks/my-tasks');
+  return response.data;
+};

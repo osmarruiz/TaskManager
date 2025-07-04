@@ -2,10 +2,9 @@ package com.dcmc.apps.taskmanager.repository;
 
 import com.dcmc.apps.taskmanager.domain.Task;
 import com.dcmc.apps.taskmanager.domain.TaskAssignment;
+import com.dcmc.apps.taskmanager.domain.User;
 import java.util.List;
 import java.util.Optional;
-
-import com.dcmc.apps.taskmanager.domain.User;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -23,4 +22,6 @@ public interface TaskAssignmentRepository extends JpaRepository<TaskAssignment, 
     Optional<TaskAssignment> findByTaskAndUser(Task task, User user);
 
     List<TaskAssignment> findByTask(Task task);
+
+    List<TaskAssignment> findByUser(User user);
 }

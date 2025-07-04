@@ -24,16 +24,14 @@ const EntitiesMenu = () => {
         Grupos de trabajo
       </MenuItem>
       {isAdmin && (
-        <>
-          <MenuItem icon="project-diagram" to="/proyectos">
-            Proyectos
-          </MenuItem>
-          {/* Submenú de Gestión Principal */}
-          <MenuItem icon="tasks" to="/tareas">
-            Tareas
-          </MenuItem>
-        </>
+        <MenuItem icon="project-diagram" to="/proyectos">
+          Proyectos
+        </MenuItem>
       )}
+      {/* Submenú de Gestión Principal */}
+      <MenuItem icon="tasks" to="/tareas">
+        Tareas
+      </MenuItem>
 
       {/* Separador visual */}
       <hr className="dropdown-divider" />

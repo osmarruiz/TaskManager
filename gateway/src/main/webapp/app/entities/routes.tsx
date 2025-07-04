@@ -18,14 +18,7 @@ export default () => {
       <ErrorBoundaryRoutes>
         {/* prettier-ignore */}
         {/* jhipster-needle-add-route-path - JHipster will add routes here */}
-        <Route
-          path="tareas"
-          element={
-            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
-              <TaskList />
-            </PrivateRoute>
-          }
-        />
+        <Route path="tareas" element={<TaskList />} />
         <Route
           path="proyectos"
           element={

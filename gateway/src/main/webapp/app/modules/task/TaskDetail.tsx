@@ -109,7 +109,14 @@ const TaskDetail: React.FC<Props> = ({ id, onBack }) => {
             (task.priority?.id && priorities.length > 0 ? priorities.find((p: any) => p.id === task.priority.id)?.name : 'Sin prioridad') ||
             'Sin prioridad'}
           {canManage && (
-            <select className="form-select mt-2" value={task.priority?.name || ''} onChange={handlePriorityChange}>
+            <select
+              className="form-select mt-2"
+              value={
+                task.priority?.name ||
+                (task.priority?.id && priorities.length > 0 ? priorities.find((p: any) => p.id === task.priority.id)?.name : '')
+              }
+              onChange={handlePriorityChange}
+            >
               <option value="">Selecciona prioridad</option>
               {priorities.map((p: any) => (
                 <option key={p.name} value={p.name}>

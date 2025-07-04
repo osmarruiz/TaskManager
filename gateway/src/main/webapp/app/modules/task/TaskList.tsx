@@ -1,63 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { getTasks, deleteTask, archiveTask, unarchiveTask } from '../../shared/util/task-api';
+import { getTasks, getMyTasks } from '../../shared/util/task-api';
 import { Task } from '../../shared/model/task.model';
-import TaskForm from './TaskForm';
 import TaskDetail from './TaskDetail';
+import { useAppSelector } from '../../config/store';
+import { hasAnyAuthority } from '../../shared/auth/private-route';
+import { AUTHORITIES } from '../../config/constants';
 
 const TaskList: React.FC = () => {
+  const account = useAppSelector(state => state.authentication.account);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showForm, setShowForm] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  // Verificar si el usuario es ADMIN
+  const isAdmin = hasAnyAuthority(account.authorities, [AUTHORITIES.ADMIN]);
 
   const loadTasks = () => {
     setLoading(true);
-    getTasks().then(data => {
-      setTasks(data);
-      setLoading(false);
-    });
+    // Si es ADMIN, cargar todas las tareas; si no, cargar solo las asignadas al usuario
+    const taskLoader = isAdmin ? getTasks() : getMyTasks();
+    taskLoader
+      .then(data => {
+        setTasks(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading tasks:', error);
+        setTasks([]);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     loadTasks();
-  }, []);
-
-  const handleDelete = async (id: number) => {
-    if (window.confirm('¿Seguro que deseas eliminar esta tarea?')) {
-      try {
-        await deleteTask(id);
-        loadTasks();
-      } catch (error) {
-        console.error('Error al eliminar tarea:', error);
-        alert('No se puede eliminar esta tarea. Asegúrate de que esté archivada primero.');
-      }
-    }
-  };
-
-  const handleArchive = async (id: number) => {
-    if (window.confirm('¿Seguro que deseas archivar esta tarea?')) {
-      try {
-        await archiveTask(id);
-        loadTasks();
-      } catch (error) {
-        console.error('Error al archivar tarea:', error);
-        alert('No se puede archivar esta tarea. Asegúrate de que esté en estado "DONE".');
-      }
-    }
-  };
-
-  const handleUnarchive = async (id: number) => {
-    if (window.confirm('¿Seguro que deseas desarchivar esta tarea?')) {
-      try {
-        await unarchiveTask(id);
-        loadTasks();
-      } catch (error) {
-        console.error('Error al desarchivar tarea:', error);
-        alert('Error al desarchivar la tarea.');
-      }
-    }
-  };
+  }, [isAdmin]);
 
   if (loading) return <div>Cargando tareas...</div>;
 
@@ -65,31 +41,14 @@ const TaskList: React.FC = () => {
     return <TaskDetail id={selectedTaskId} onBack={() => setSelectedTaskId(null)} />;
   }
 
-  if (taskToEdit) {
-    return (
-      <TaskForm
-        taskToEdit={taskToEdit}
-        onSuccess={() => {
-          setTaskToEdit(null);
-          loadTasks();
-        }}
-      />
-    );
-  }
-
   return (
     <div>
       <h2>Lista de Tareas</h2>
-      <button className="btn btn-success mb-3" onClick={() => setShowForm(!showForm)}>
-        {showForm ? 'Cerrar formulario' : 'Nueva tarea'}
-      </button>
-      {showForm && (
-        <TaskForm
-          onSuccess={() => {
-            setShowForm(false);
-            loadTasks();
-          }}
-        />
+      {!isAdmin && (
+        <div className="alert alert-info mb-3">
+          <i className="fas fa-info-circle me-2"></i>
+          Solo se muestran las tareas asignadas a tu usuario.
+        </div>
       )}
       <table className="table">
         <thead>
@@ -113,21 +72,6 @@ const TaskList: React.FC = () => {
               <td>
                 <button className="btn btn-info btn-sm me-2" onClick={() => setSelectedTaskId(task.id)}>
                   Ver
-                </button>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => setTaskToEdit(task)}>
-                  Editar
-                </button>
-                {task.archived ? (
-                  <button className="btn btn-success btn-sm me-2" onClick={() => handleUnarchive(task.id)}>
-                    Desarchivar
-                  </button>
-                ) : (
-                  <button className="btn btn-warning btn-sm me-2" onClick={() => handleArchive(task.id)}>
-                    Archivar
-                  </button>
-                )}
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id)}>
-                  Eliminar
                 </button>
               </td>
             </tr>
