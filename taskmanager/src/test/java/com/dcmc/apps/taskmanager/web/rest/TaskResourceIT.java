@@ -10,11 +10,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.dcmc.apps.taskmanager.IntegrationTest;
+import com.dcmc.apps.taskmanager.domain.Priority;
 import com.dcmc.apps.taskmanager.domain.Project;
 import com.dcmc.apps.taskmanager.domain.Task;
+import com.dcmc.apps.taskmanager.domain.TaskStatusCatalog;
 import com.dcmc.apps.taskmanager.domain.WorkGroup;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskPriority;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskStatus;
 import com.dcmc.apps.taskmanager.repository.TaskRepository;
 import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.service.mapper.TaskMapper;
@@ -50,12 +50,6 @@ class TaskResourceIT {
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
-
-    private static final TaskPriority DEFAULT_PRIORITY = TaskPriority.LOW;
-    private static final TaskPriority UPDATED_PRIORITY = TaskPriority.NORMAL;
-
-    private static final TaskStatus DEFAULT_STATUS = TaskStatus.NOT_STARTED;
-    private static final TaskStatus UPDATED_STATUS = TaskStatus.WORKING_ON_IT;
 
     private static final Instant DEFAULT_CREATE_TIME = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_CREATE_TIME = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -109,8 +103,6 @@ class TaskResourceIT {
         Task task = new Task()
             .title(DEFAULT_TITLE)
             .description(DEFAULT_DESCRIPTION)
-            .priority(DEFAULT_PRIORITY)
-            .status(DEFAULT_STATUS)
             .createTime(DEFAULT_CREATE_TIME)
             .updateTime(DEFAULT_UPDATE_TIME)
             .deadline(DEFAULT_DEADLINE)
@@ -126,6 +118,26 @@ class TaskResourceIT {
             workGroup = TestUtil.findAll(em, WorkGroup.class).get(0);
         }
         task.setWorkGroup(workGroup);
+        // Add required entity
+        Priority priority;
+        if (TestUtil.findAll(em, Priority.class).isEmpty()) {
+            priority = PriorityResourceIT.createEntity();
+            em.persist(priority);
+            em.flush();
+        } else {
+            priority = TestUtil.findAll(em, Priority.class).get(0);
+        }
+        task.setPriority(priority);
+        // Add required entity
+        TaskStatusCatalog taskStatusCatalog;
+        if (TestUtil.findAll(em, TaskStatusCatalog.class).isEmpty()) {
+            taskStatusCatalog = TaskStatusCatalogResourceIT.createEntity(em);
+            em.persist(taskStatusCatalog);
+            em.flush();
+        } else {
+            taskStatusCatalog = TestUtil.findAll(em, TaskStatusCatalog.class).get(0);
+        }
+        task.setStatus(taskStatusCatalog);
         return task;
     }
 
@@ -139,8 +151,6 @@ class TaskResourceIT {
         Task updatedTask = new Task()
             .title(UPDATED_TITLE)
             .description(UPDATED_DESCRIPTION)
-            .priority(UPDATED_PRIORITY)
-            .status(UPDATED_STATUS)
             .createTime(UPDATED_CREATE_TIME)
             .updateTime(UPDATED_UPDATE_TIME)
             .deadline(UPDATED_DEADLINE)
@@ -156,6 +166,26 @@ class TaskResourceIT {
             workGroup = TestUtil.findAll(em, WorkGroup.class).get(0);
         }
         updatedTask.setWorkGroup(workGroup);
+        // Add required entity
+        Priority priority;
+        if (TestUtil.findAll(em, Priority.class).isEmpty()) {
+            priority = PriorityResourceIT.createUpdatedEntity();
+            em.persist(priority);
+            em.flush();
+        } else {
+            priority = TestUtil.findAll(em, Priority.class).get(0);
+        }
+        updatedTask.setPriority(priority);
+        // Add required entity
+        TaskStatusCatalog taskStatusCatalog;
+        if (TestUtil.findAll(em, TaskStatusCatalog.class).isEmpty()) {
+            taskStatusCatalog = TaskStatusCatalogResourceIT.createUpdatedEntity(em);
+            em.persist(taskStatusCatalog);
+            em.flush();
+        } else {
+            taskStatusCatalog = TestUtil.findAll(em, TaskStatusCatalog.class).get(0);
+        }
+        updatedTask.setStatus(taskStatusCatalog);
         return updatedTask;
     }
 
@@ -250,40 +280,6 @@ class TaskResourceIT {
 
     @Test
     @Transactional
-    void checkPriorityIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        task.setPriority(null);
-
-        // Create the Task, which fails.
-        TaskDTO taskDTO = taskMapper.toDto(task);
-
-        restTaskMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(taskDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    void checkStatusIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        task.setStatus(null);
-
-        // Create the Task, which fails.
-        TaskDTO taskDTO = taskMapper.toDto(task);
-
-        restTaskMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(taskDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void checkCreateTimeIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         // set the field null
@@ -330,8 +326,6 @@ class TaskResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(task.getId().intValue())))
             .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
-            .andExpect(jsonPath("$.[*].priority").value(hasItem(DEFAULT_PRIORITY.toString())))
-            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].createTime").value(hasItem(DEFAULT_CREATE_TIME.toString())))
             .andExpect(jsonPath("$.[*].updateTime").value(hasItem(DEFAULT_UPDATE_TIME.toString())))
             .andExpect(jsonPath("$.[*].deadline").value(hasItem(sameInstant(DEFAULT_DEADLINE))))
@@ -353,8 +347,6 @@ class TaskResourceIT {
             .andExpect(jsonPath("$.id").value(task.getId().intValue()))
             .andExpect(jsonPath("$.title").value(DEFAULT_TITLE))
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
-            .andExpect(jsonPath("$.priority").value(DEFAULT_PRIORITY.toString()))
-            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
             .andExpect(jsonPath("$.createTime").value(DEFAULT_CREATE_TIME.toString()))
             .andExpect(jsonPath("$.updateTime").value(DEFAULT_UPDATE_TIME.toString()))
             .andExpect(jsonPath("$.deadline").value(sameInstant(DEFAULT_DEADLINE)))
@@ -475,66 +467,6 @@ class TaskResourceIT {
 
         // Get all the taskList where description does not contain
         defaultTaskFiltering("description.doesNotContain=" + UPDATED_DESCRIPTION, "description.doesNotContain=" + DEFAULT_DESCRIPTION);
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByPriorityIsEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where priority equals to
-        defaultTaskFiltering("priority.equals=" + DEFAULT_PRIORITY, "priority.equals=" + UPDATED_PRIORITY);
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByPriorityIsInShouldWork() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where priority in
-        defaultTaskFiltering("priority.in=" + DEFAULT_PRIORITY + "," + UPDATED_PRIORITY, "priority.in=" + UPDATED_PRIORITY);
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByPriorityIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where priority is not null
-        defaultTaskFiltering("priority.specified=true", "priority.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByStatusIsEqualToSomething() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where status equals to
-        defaultTaskFiltering("status.equals=" + DEFAULT_STATUS, "status.equals=" + UPDATED_STATUS);
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByStatusIsInShouldWork() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where status in
-        defaultTaskFiltering("status.in=" + DEFAULT_STATUS + "," + UPDATED_STATUS, "status.in=" + UPDATED_STATUS);
-    }
-
-    @Test
-    @Transactional
-    void getAllTasksByStatusIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        insertedTask = taskRepository.saveAndFlush(task);
-
-        // Get all the taskList where status is not null
-        defaultTaskFiltering("status.specified=true", "status.specified=false");
     }
 
     @Test
@@ -800,6 +732,50 @@ class TaskResourceIT {
 
     @Test
     @Transactional
+    void getAllTasksByPriorityIsEqualToSomething() throws Exception {
+        Priority priority;
+        if (TestUtil.findAll(em, Priority.class).isEmpty()) {
+            taskRepository.saveAndFlush(task);
+            priority = PriorityResourceIT.createEntity();
+        } else {
+            priority = TestUtil.findAll(em, Priority.class).get(0);
+        }
+        em.persist(priority);
+        em.flush();
+        task.setPriority(priority);
+        taskRepository.saveAndFlush(task);
+        Long priorityId = priority.getId();
+        // Get all the taskList where priority equals to priorityId
+        defaultTaskShouldBeFound("priorityId.equals=" + priorityId);
+
+        // Get all the taskList where priority equals to (priorityId + 1)
+        defaultTaskShouldNotBeFound("priorityId.equals=" + (priorityId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllTasksByStatusIsEqualToSomething() throws Exception {
+        TaskStatusCatalog status;
+        if (TestUtil.findAll(em, TaskStatusCatalog.class).isEmpty()) {
+            taskRepository.saveAndFlush(task);
+            status = TaskStatusCatalogResourceIT.createEntity(em);
+        } else {
+            status = TestUtil.findAll(em, TaskStatusCatalog.class).get(0);
+        }
+        em.persist(status);
+        em.flush();
+        task.setStatus(status);
+        taskRepository.saveAndFlush(task);
+        Long statusId = status.getId();
+        // Get all the taskList where status equals to statusId
+        defaultTaskShouldBeFound("statusId.equals=" + statusId);
+
+        // Get all the taskList where status equals to (statusId + 1)
+        defaultTaskShouldNotBeFound("statusId.equals=" + (statusId + 1));
+    }
+
+    @Test
+    @Transactional
     void getAllTasksByParentProjectIsEqualToSomething() throws Exception {
         Project parentProject;
         if (TestUtil.findAll(em, Project.class).isEmpty()) {
@@ -836,8 +812,6 @@ class TaskResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(task.getId().intValue())))
             .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
-            .andExpect(jsonPath("$.[*].priority").value(hasItem(DEFAULT_PRIORITY.toString())))
-            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
             .andExpect(jsonPath("$.[*].createTime").value(hasItem(DEFAULT_CREATE_TIME.toString())))
             .andExpect(jsonPath("$.[*].updateTime").value(hasItem(DEFAULT_UPDATE_TIME.toString())))
             .andExpect(jsonPath("$.[*].deadline").value(hasItem(sameInstant(DEFAULT_DEADLINE))))
@@ -893,8 +867,6 @@ class TaskResourceIT {
         updatedTask
             .title(UPDATED_TITLE)
             .description(UPDATED_DESCRIPTION)
-            .priority(UPDATED_PRIORITY)
-            .status(UPDATED_STATUS)
             .createTime(UPDATED_CREATE_TIME)
             .updateTime(UPDATED_UPDATE_TIME)
             .deadline(UPDATED_DEADLINE)
@@ -993,8 +965,8 @@ class TaskResourceIT {
         partialUpdatedTask.setId(task.getId());
 
         partialUpdatedTask
+            .title(UPDATED_TITLE)
             .description(UPDATED_DESCRIPTION)
-            .priority(UPDATED_PRIORITY)
             .createTime(UPDATED_CREATE_TIME)
             .deadline(UPDATED_DEADLINE)
             .archived(UPDATED_ARCHIVED);
@@ -1029,8 +1001,6 @@ class TaskResourceIT {
         partialUpdatedTask
             .title(UPDATED_TITLE)
             .description(UPDATED_DESCRIPTION)
-            .priority(UPDATED_PRIORITY)
-            .status(UPDATED_STATUS)
             .createTime(UPDATED_CREATE_TIME)
             .updateTime(UPDATED_UPDATE_TIME)
             .deadline(UPDATED_DEADLINE)

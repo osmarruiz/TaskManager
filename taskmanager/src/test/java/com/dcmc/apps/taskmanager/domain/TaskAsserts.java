@@ -50,8 +50,6 @@ public class TaskAsserts {
             .as("Verify Task relevant properties")
             .satisfies(a -> assertThat(a.getTitle()).as("check title").isEqualTo(expected.getTitle()))
             .satisfies(a -> assertThat(a.getDescription()).as("check description").isEqualTo(expected.getDescription()))
-            .satisfies(a -> assertThat(a.getPriority()).as("check priority").isEqualTo(expected.getPriority()))
-            .satisfies(a -> assertThat(a.getStatus()).as("check status").isEqualTo(expected.getStatus()))
             .satisfies(a -> assertThat(a.getCreateTime()).as("check createTime").isEqualTo(expected.getCreateTime()))
             .satisfies(a -> assertThat(a.getUpdateTime()).as("check updateTime").isEqualTo(expected.getUpdateTime()))
             .satisfies(a ->
@@ -76,6 +74,8 @@ public class TaskAsserts {
         assertThat(actual)
             .as("Verify Task relationships")
             .satisfies(a -> assertThat(a.getWorkGroup()).as("check workGroup").isEqualTo(expected.getWorkGroup()))
+            .satisfies(a -> assertThat(a.getPriority()).as("check priority").isEqualTo(expected.getPriority()))
+            .satisfies(a -> assertThat(a.getStatus()).as("check status").isEqualTo(expected.getStatus()))
             .satisfies(a -> assertThat(a.getParentProject()).as("check parentProject").isEqualTo(expected.getParentProject()));
     }
 }

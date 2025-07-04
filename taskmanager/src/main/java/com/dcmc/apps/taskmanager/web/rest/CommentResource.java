@@ -6,6 +6,7 @@ import com.dcmc.apps.taskmanager.service.CommentService;
 import com.dcmc.apps.taskmanager.service.criteria.CommentCriteria;
 import com.dcmc.apps.taskmanager.service.dto.CommentDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -30,6 +31,7 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link com.dcmc.apps.taskmanager.domain.Comment}.
  */
 @RestController
+@Hidden
 @RequestMapping("/api/comments")
 public class CommentResource {
 

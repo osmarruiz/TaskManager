@@ -7,6 +7,8 @@ import com.dcmc.apps.taskmanager.service.criteria.WorkGroupMembershipCriteria;
 import com.dcmc.apps.taskmanager.service.dto.CreateWorkGroupMembershipDTO;
 import com.dcmc.apps.taskmanager.service.dto.WorkGroupMembershipDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -25,6 +27,7 @@ import tech.jhipster.web.util.ResponseUtil;
 /**
  * REST controller for managing {@link com.dcmc.apps.taskmanager.domain.WorkGroupMembership}.
  */
+@Hidden
 @RestController
 @RequestMapping("/api/work-group-memberships")
 public class WorkGroupMembershipResource {
@@ -59,6 +62,7 @@ public class WorkGroupMembershipResource {
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new workGroupMembershipDTO, or with status {@code 400 (Bad Request)} if the workGroupMembership has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PostMapping("")
     public ResponseEntity<WorkGroupMembershipDTO> createWorkGroupMembership(
         @Valid @RequestBody CreateWorkGroupMembershipDTO createDTO
@@ -89,6 +93,7 @@ public class WorkGroupMembershipResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupMembershipDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<WorkGroupMembershipDTO> updateWorkGroupMembership(
         @PathVariable(value = "id", required = false) final Long id,
@@ -123,6 +128,7 @@ public class WorkGroupMembershipResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupMembershipDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<WorkGroupMembershipDTO> partialUpdateWorkGroupMembership(
         @PathVariable(value = "id", required = false) final Long id,
@@ -180,6 +186,7 @@ public class WorkGroupMembershipResource {
      * @param id the id of the workGroupMembershipDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the workGroupMembershipDTO, or with status {@code 404 (Not Found)}.
      */
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<WorkGroupMembershipDTO> getWorkGroupMembership(@PathVariable("id") Long id) {
         LOG.debug("REST request to get WorkGroupMembership : {}", id);
@@ -193,6 +200,7 @@ public class WorkGroupMembershipResource {
      * @param id the id of the workGroupMembershipDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkGroupMembership(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete WorkGroupMembership : {}", id);

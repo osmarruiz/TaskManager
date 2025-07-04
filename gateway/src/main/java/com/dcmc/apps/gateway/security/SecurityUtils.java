@@ -114,6 +114,18 @@ public final class SecurityUtils {
 
     @SuppressWarnings("unchecked")
     private static Collection<String> getRolesFromClaims(Map<String, Object> claims) {
+        // First try to get roles from realm_access.roles (Keycloak standard)
+        if (claims.containsKey("realm_access")) {
+            Map<String, Object> realmAccess = (Map<String, Object>) claims.get("realm_access");
+            if (realmAccess.containsKey("roles")) {
+                Collection<String> realmRoles = (Collection<String>) realmAccess.get("roles");
+                if (realmRoles != null && !realmRoles.isEmpty()) {
+                    return realmRoles;
+                }
+            }
+        }
+        
+        // Fallback to other role sources
         return (Collection<String>) claims.getOrDefault(
             "groups",
             claims.getOrDefault("roles", claims.getOrDefault(CLAIMS_NAMESPACE + "roles", new ArrayList<>()))

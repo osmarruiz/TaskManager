@@ -28,6 +28,7 @@ export const App = () => {
   }, []);
 
   const isAuthenticated = useAppSelector(state => state.authentication.isAuthenticated);
+  const account = useAppSelector(state => state.authentication.account);
   const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentication.account.authorities, [AUTHORITIES.ADMIN]));
   const ribbonEnv = useAppSelector(state => state.applicationProfile.ribbonEnv);
   const isInProduction = useAppSelector(state => state.applicationProfile.inProduction);
@@ -45,6 +46,7 @@ export const App = () => {
             ribbonEnv={ribbonEnv}
             isInProduction={isInProduction}
             isOpenAPIEnabled={isOpenAPIEnabled}
+            account={account}
           />
         </ErrorBoundary>
         <div className="container-fluid view-container" id="app-view-container">

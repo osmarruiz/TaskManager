@@ -79,6 +79,10 @@ public class CacheConfiguration {
             createCache(cm, com.dcmc.apps.taskmanager.domain.Task.class.getName(), jcacheConfiguration);
             createCache(cm, com.dcmc.apps.taskmanager.domain.Comment.class.getName(), jcacheConfiguration);
             createCache(cm, com.dcmc.apps.taskmanager.domain.Project.class.getName(), jcacheConfiguration);
+            createCache(cm, com.dcmc.apps.taskmanager.domain.TaskAssignment.class.getName(), jcacheConfiguration);
+            createCache(cm, com.dcmc.apps.taskmanager.domain.ProjectMember.class.getName(), jcacheConfiguration);
+            createCache(cm, com.dcmc.apps.taskmanager.domain.Priority.class.getName(), jcacheConfiguration);
+            createCache(cm, com.dcmc.apps.taskmanager.domain.TaskStatusCatalog.class.getName(), jcacheConfiguration);
             // jhipster-needle-redis-add-entry
         };
     }

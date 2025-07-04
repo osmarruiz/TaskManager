@@ -1,6 +1,8 @@
 package com.dcmc.apps.taskmanager.domain;
 
+import static com.dcmc.apps.taskmanager.domain.PriorityTestSamples.*;
 import static com.dcmc.apps.taskmanager.domain.ProjectTestSamples.*;
+import static com.dcmc.apps.taskmanager.domain.TaskStatusCatalogTestSamples.*;
 import static com.dcmc.apps.taskmanager.domain.TaskTestSamples.*;
 import static com.dcmc.apps.taskmanager.domain.WorkGroupTestSamples.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +36,30 @@ class TaskTest {
 
         task.workGroup(null);
         assertThat(task.getWorkGroup()).isNull();
+    }
+
+    @Test
+    void priorityTest() {
+        Task task = getTaskRandomSampleGenerator();
+        Priority priorityBack = getPriorityRandomSampleGenerator();
+
+        task.setPriority(priorityBack);
+        assertThat(task.getPriority()).isEqualTo(priorityBack);
+
+        task.priority(null);
+        assertThat(task.getPriority()).isNull();
+    }
+
+    @Test
+    void statusTest() {
+        Task task = getTaskRandomSampleGenerator();
+        TaskStatusCatalog taskStatusCatalogBack = getTaskStatusCatalogRandomSampleGenerator();
+
+        task.setStatus(taskStatusCatalogBack);
+        assertThat(task.getStatus()).isEqualTo(taskStatusCatalogBack);
+
+        task.status(null);
+        assertThat(task.getStatus()).isNull();
     }
 
     @Test

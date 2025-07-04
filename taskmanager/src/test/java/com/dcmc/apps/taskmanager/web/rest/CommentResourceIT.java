@@ -587,7 +587,7 @@ class CommentResourceIT {
         Comment partialUpdatedComment = new Comment();
         partialUpdatedComment.setId(comment.getId());
 
-        partialUpdatedComment.content(UPDATED_CONTENT);
+        partialUpdatedComment.content(UPDATED_CONTENT).createTime(UPDATED_CREATE_TIME);
 
         restCommentMockMvc
             .perform(

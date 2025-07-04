@@ -1,11 +1,16 @@
 package com.dcmc.apps.taskmanager.web.rest;
 
+import com.dcmc.apps.taskmanager.domain.Project;
 import com.dcmc.apps.taskmanager.repository.ProjectRepository;
 import com.dcmc.apps.taskmanager.service.ProjectQueryService;
 import com.dcmc.apps.taskmanager.service.ProjectService;
+import com.dcmc.apps.taskmanager.service.TaskService;
 import com.dcmc.apps.taskmanager.service.criteria.ProjectCriteria;
-import com.dcmc.apps.taskmanager.service.dto.ProjectDTO;
+import com.dcmc.apps.taskmanager.service.dto.*;
+import com.dcmc.apps.taskmanager.service.dto.ProjectMemberDTO;
+import com.dcmc.apps.taskmanager.service.dto.TaskDTO;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -46,10 +51,18 @@ public class ProjectResource {
 
     private final ProjectQueryService projectQueryService;
 
-    public ProjectResource(ProjectService projectService, ProjectRepository projectRepository, ProjectQueryService projectQueryService) {
+    private final TaskService taskService;
+
+    public ProjectResource(
+        ProjectService projectService,
+        ProjectRepository projectRepository,
+        ProjectQueryService projectQueryService,
+        TaskService taskService
+    ) {
         this.projectService = projectService;
         this.projectRepository = projectRepository;
         this.projectQueryService = projectQueryService;
+        this.taskService = taskService;
     }
 
     /**
@@ -60,15 +73,14 @@ public class ProjectResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody ProjectDTO projectDTO) throws URISyntaxException {
+    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO projectDTO) throws URISyntaxException {
         LOG.debug("REST request to save Project : {}", projectDTO);
-        if (projectDTO.getId() != null) {
-            throw new BadRequestAlertException("A new project cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        projectDTO = projectService.save(projectDTO);
-        return ResponseEntity.created(new URI("/api/projects/" + projectDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, projectDTO.getId().toString()))
-            .body(projectDTO);
+
+        ProjectDTO result = projectService.save(projectDTO);
+
+        return ResponseEntity.created(new URI("/api/projects/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -81,6 +93,7 @@ public class ProjectResource {
      * or with status {@code 500 (Internal Server Error)} if the projectDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<ProjectDTO> updateProject(
         @PathVariable(value = "id", required = false) final Long id,
@@ -115,6 +128,7 @@ public class ProjectResource {
      * or with status {@code 500 (Internal Server Error)} if the projectDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<ProjectDTO> partialUpdateProject(
         @PathVariable(value = "id", required = false) final Long id,
@@ -177,6 +191,7 @@ public class ProjectResource {
      * @param id the id of the projectDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the projectDTO, or with status {@code 404 (Not Found)}.
      */
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDTO> getProject(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Project : {}", id);
@@ -190,6 +205,7 @@ public class ProjectResource {
      * @param id the id of the projectDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Project : {}", id);
@@ -197,5 +213,57 @@ public class ProjectResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    // Custom endpoint to get projects by work group ID
+
+    @GetMapping("/by-workgroup/{workGroupId}")
+    public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(@PathVariable Long workGroupId) {
+        LOG.debug("REST request to get Projects by work group ID: {}", workGroupId);
+        List<ProjectDTO> projects = projectService.findAllByWorkGroupId(workGroupId);
+        return ResponseEntity.ok().body(projects);
+    }
+
+    @PostMapping("/{id}/add-task")
+    public ResponseEntity<TaskDTO> addTaskToProject(@PathVariable Long id, @Valid @RequestBody CreateTaskDTO taskDTO) {
+        TaskDTO createdTask = taskService.createTaskForProject(id, taskDTO);
+        return ResponseEntity.created(URI.create("/api/tasks/" + createdTask.getId())).body(createdTask);
+    }
+
+    /* Endpoint para eliminar subtarea */
+    @DeleteMapping("/{id}/remove-task/{taskId}")
+    public ResponseEntity<Void> removeTaskFromProject(@PathVariable Long id, @PathVariable Long taskId) {
+        taskService.deleteTaskFromProject(id, taskId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /* Endpoint para listar subtareas */
+    @GetMapping("/{id}/tasks")
+    public ResponseEntity<List<TaskDTO>> getProjectTasks(@PathVariable Long id) {
+        List<TaskDTO> tasks = taskService.findAllTasksByProjectId(id);
+        return ResponseEntity.ok().body(tasks);
+    }
+
+    @PostMapping("/{id}/assign-user")
+    public ResponseEntity<ProjectMemberDTO> assignUserToProject(
+        @PathVariable Long id,
+        @Valid @RequestBody AssignProjectToUserDTO assignProjectToUserDTO
+    ) {
+        ProjectMemberDTO result = projectService.assignUserToProject(id, assignProjectToUserDTO);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<ProjectMemberDTO>> getProjectMembers(@PathVariable Long id) {
+        LOG.debug("REST request to get members for Project : {}", id);
+        List<ProjectMemberDTO> members = projectService.getProjectMembers(id);
+        return ResponseEntity.ok().body(members);
+    }
+
+    @GetMapping("/my-projects")
+    public ResponseEntity<List<ProjectDTO>> getMyProjects() {
+        LOG.debug("REST request to get projects for current user");
+        List<ProjectDTO> myProjects = projectService.getProjectsForCurrentUser();
+        return ResponseEntity.ok(myProjects);
     }
 }

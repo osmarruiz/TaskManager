@@ -83,3 +83,127 @@ Navbar styles
   top: 0;
   z-index: 1031;
 }
+
+/* ==========================================================================
+User Info styles
+========================================================================== */
+.user-info {
+  .nav-link {
+    color: $header-color !important;
+    padding: 0.5rem 1rem;
+
+    &:hover {
+      color: $header-color-hover !important;
+    }
+  }
+
+  .user-name {
+    font-weight: 500;
+    margin-right: 0.5rem;
+  }
+
+  .user-roles {
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Responsive adjustments for user info */
+@media (max-width: 768px) {
+  .user-info {
+    .nav-link {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .user-name {
+      margin-right: 0.25rem;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+}
+
+/* ==========================================================================
+Dropdown Menu styles
+========================================================================== */
+.dropdown-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 0.5rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+
+  i {
+    color: #495057;
+  }
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: #dee2e6;
+}
+
+/* Estilos para los elementos del menú de entidades */
+#entity-menu {
+  .dropdown-menu {
+    min-width: 200px;
+    padding: 0;
+
+    .dropdown-item {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #f8f9fa;
+
+      &:hover {
+        background-color: #e9ecef;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+/* ==========================================================================
+Access Denied styles
+========================================================================== */
+.access-denied-card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 8px;
+
+  .card-header {
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 600;
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  .alert {
+    border-radius: 6px;
+    border: none;
+  }
+
+  .fa-lock {
+    opacity: 0.6;
+  }
+
+  .text-muted {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}

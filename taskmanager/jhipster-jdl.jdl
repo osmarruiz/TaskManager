@@ -1,21 +1,7 @@
-
 enum Role {
   OWNER,
   MODERADOR,
   MIEMBRO
-}
-
-enum TaskPriority {
-  LOW,
-  NORMAL,
-  HIGH
-}
-
-enum TaskStatus {
-  NOT_STARTED,
-  WORKING_ON_IT,
-  DONE,
-  ARCHIVED
 }
 
 entity WorkGroup {
@@ -32,8 +18,6 @@ entity WorkGroupMembership {
 entity Task {
   title String required,
   description String required,
-  priority TaskPriority required,
-  status TaskStatus required,
   createTime Instant required,
   updateTime Instant required,
   deadline ZonedDateTime,
@@ -54,17 +38,47 @@ entity Project {
   endDate ZonedDateTime
 }
 
+entity TaskAssignment {
+  assignedAt Instant required
+}
+
+entity ProjectMember {
+  assignedAt Instant required
+}
+
+entity Priority {
+  name String required,
+  description String,
+  visible Boolean required,
+  createdAt Instant required,
+  updatedAt Instant
+}
+
+entity TaskStatusCatalog {
+  name String required,
+  description String,
+  createdAt Instant required,
+  updatedAt Instant
+}
+
 relationship ManyToOne {
   WorkGroupMembership{user required} to User with builtInEntity,
   WorkGroupMembership{workGroup required} to WorkGroup,
   Task{workGroup required} to WorkGroup,
+  Task{priority required} to Priority,
+  Task{status required} to TaskStatusCatalog,
+  Task{parentProject} to Project,
   Project{workGroup required} to WorkGroup,
   Comment{task required} to Task,
-  Task{parentProject} to Project,
-  Comment{author required} to User with builtInEntity
+  Comment{author required} to User with builtInEntity,
+  TaskAssignment{task required} to Task,
+  TaskAssignment{user required} to User with builtInEntity,
+  ProjectMember{project required} to Project,
+  ProjectMember{user required} to User with builtInEntity,
+  TaskStatusCatalog{createdBy required} to User with builtInEntity
 }
 
-paginate Task, Project, WorkGroup, Comment with pagination
+paginate Task, Project, WorkGroup, Comment, TaskAssignment, ProjectMember, Priority, TaskStatusCatalog with pagination
 dto * with mapstruct
 service * with serviceClass
 filter *

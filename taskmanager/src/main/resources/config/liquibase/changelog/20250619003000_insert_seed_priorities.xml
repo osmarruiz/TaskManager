@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="20250619003000-1" author="jhipster">
+    <insert tableName="priority">
+      <column name="id" valueNumeric="10001"/>
+      <column name="name" value="HIGH"/>
+      <column name="description" value="Tareas urgentes y críticas"/>
+      <column name="visible" valueBoolean="true"/>
+      <column name="created_at" valueDate="${now}"/>
+    </insert>
+    <insert tableName="priority">
+      <column name="id" valueNumeric="10002"/>
+      <column name="name" value="NORMAL"/>
+      <column name="description" value="Tareas importantes pero no urgentes"/>
+      <column name="visible" valueBoolean="true"/>
+      <column name="created_at" valueDate="${now}"/>
+    </insert>
+    <insert tableName="priority">
+      <column name="id" valueNumeric="10003"/>
+      <column name="name" value="LOW"/>
+      <column name="description" value="Tareas menores o sin urgencia"/>
+      <column name="visible" valueBoolean="true"/>
+      <column name="created_at" valueDate="${now}"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>

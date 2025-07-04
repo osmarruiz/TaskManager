@@ -6,6 +6,7 @@ import com.dcmc.apps.taskmanager.service.dto.UserDTO;
 import java.util.*;
 
 import com.dcmc.apps.taskmanager.service.dto.UserWorkGroupDTO;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.PaginationUtil;
 
+@Hidden
 @RestController
 @RequestMapping("/api")
 public class PublicUserResource {

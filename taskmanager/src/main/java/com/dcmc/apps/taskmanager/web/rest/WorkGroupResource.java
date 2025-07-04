@@ -7,6 +7,7 @@ import com.dcmc.apps.taskmanager.service.WorkGroupService;
 import com.dcmc.apps.taskmanager.service.criteria.WorkGroupCriteria;
 import com.dcmc.apps.taskmanager.service.dto.*;
 import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -86,6 +87,8 @@ public class WorkGroupResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @Hidden
     @PutMapping("/{id}")
     public ResponseEntity<WorkGroupDTO> updateWorkGroup(
         @PathVariable(value = "id", required = false) final Long id,
@@ -120,6 +123,8 @@ public class WorkGroupResource {
      * or with status {@code 500 (Internal Server Error)} if the workGroupDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @Hidden
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<WorkGroupDTO> partialUpdateWorkGroup(
         @PathVariable(value = "id", required = false) final Long id,
@@ -170,6 +175,8 @@ public class WorkGroupResource {
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
+
+    @Hidden
     @GetMapping("/count")
     public ResponseEntity<Long> countWorkGroups(WorkGroupCriteria criteria) {
         LOG.debug("REST request to count WorkGroups by criteria: {}", criteria);
@@ -182,6 +189,8 @@ public class WorkGroupResource {
      * @param id the id of the workGroupDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the workGroupDTO, or with status {@code 404 (Not Found)}.
      */
+
+    @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<WorkGroupDTO> getWorkGroup(@PathVariable("id") Long id) {
         LOG.debug("REST request to get WorkGroup : {}", id);
@@ -195,6 +204,8 @@ public class WorkGroupResource {
      * @param id the id of the workGroupDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+
+    @Hidden
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkGroup(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete WorkGroup : {}", id);
@@ -210,24 +221,22 @@ public class WorkGroupResource {
      * {@code PUT /work-groups/{id}/transfer-ownership} : Transfiere la propiedad de un grupo a otro usuario.
      *
      * @param id el id del grupo a transferir.
-     * @param transferOwnershipDTO contiene el ID del nuevo propietario.
+     * @param newOwnerUserId contiene el ID del nuevo propietario.
      * @return el {@link ResponseEntity} con status {@code 200 (OK)} si la transferencia fue exitosa,
      *         o con status {@code 400 (Bad Request)} si los datos son inválidos,
      *         o con status {@code 404 (Not Found)} si el grupo o usuario no existen,
      *         o con status {@code 500 (Internal Server Error)} si ocurre un error inesperado.
      */
-    @PutMapping("/{id}/transfer-ownership")
+    @PutMapping("/{id}/transfer-ownership/{newOwnerUserId}")
     public ResponseEntity<Void> transferOwnership(
-        @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody TransferOwnershipDTO transferOwnershipDTO
+        @PathVariable final Long id,
+        @PathVariable String newOwnerUserId
     ) {
-        LOG.debug("REST request to transfer ownership of WorkGroup : {}, {}", id, transferOwnershipDTO);
+        LOG.debug("REST request to transfer ownership of WorkGroup : {}, {}", id, newOwnerUserId);
 
-        if (transferOwnershipDTO.getNewOwnerUserId() == null) {
-            throw new BadRequestAlertException("Se requiere el ID del nuevo propietario", ENTITY_NAME, "newOwnerIdnull");
-        }
 
-        workGroupService.transferOwnership(id, transferOwnershipDTO.getNewOwnerUserId());
+
+        workGroupService.transferOwnership(id, newOwnerUserId);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createAlert(applicationName, "Se transfirió la propiedad correctamente", id.toString()))
@@ -321,6 +330,13 @@ public class WorkGroupResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createAlert(applicationName, "workGroup.left", id.toString()))
             .build();
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<List<UserWorkGroupDTO>> getCurrentUserWorkGroups() {
+        LOG.debug("REST request to get WorkGroups for current user");
+        List<UserWorkGroupDTO> workGroups = workGroupService.getCurrentUserWorkGroups();
+        return ResponseEntity.ok(workGroups);
     }
 
 

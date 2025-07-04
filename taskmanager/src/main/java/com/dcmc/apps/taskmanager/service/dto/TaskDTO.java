@@ -1,7 +1,5 @@
 package com.dcmc.apps.taskmanager.service.dto;
 
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskPriority;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskStatus;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
@@ -23,12 +21,6 @@ public class TaskDTO implements Serializable {
     private String description;
 
     @NotNull
-    private TaskPriority priority;
-
-    @NotNull
-    private TaskStatus status;
-
-    @NotNull
     private Instant createTime;
 
     @NotNull
@@ -42,6 +34,12 @@ public class TaskDTO implements Serializable {
 
     @NotNull
     private WorkGroupDTO workGroup;
+
+    @NotNull
+    private PriorityDTO priority;
+
+    @NotNull
+    private TaskStatusCatalogDTO status;
 
     private ProjectDTO parentProject;
 
@@ -67,22 +65,6 @@ public class TaskDTO implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public TaskPriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(TaskPriority priority) {
-        this.priority = priority;
-    }
-
-    public TaskStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
     }
 
     public Instant getCreateTime() {
@@ -133,6 +115,22 @@ public class TaskDTO implements Serializable {
         this.workGroup = workGroup;
     }
 
+    public PriorityDTO getPriority() {
+        return priority;
+    }
+
+    public void setPriority(PriorityDTO priority) {
+        this.priority = priority;
+    }
+
+    public TaskStatusCatalogDTO getStatus() {
+        return status;
+    }
+
+    public void setStatus(TaskStatusCatalogDTO status) {
+        this.status = status;
+    }
+
     public ProjectDTO getParentProject() {
         return parentProject;
     }
@@ -169,14 +167,14 @@ public class TaskDTO implements Serializable {
             "id=" + getId() +
             ", title='" + getTitle() + "'" +
             ", description='" + getDescription() + "'" +
-            ", priority='" + getPriority() + "'" +
-            ", status='" + getStatus() + "'" +
             ", createTime='" + getCreateTime() + "'" +
             ", updateTime='" + getUpdateTime() + "'" +
             ", deadline='" + getDeadline() + "'" +
             ", archived='" + getArchived() + "'" +
             ", archivedDate='" + getArchivedDate() + "'" +
             ", workGroup=" + getWorkGroup() +
+            ", priority=" + getPriority() +
+            ", status=" + getStatus() +
             ", parentProject=" + getParentProject() +
             "}";
     }

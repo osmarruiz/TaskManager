@@ -57,5 +57,15 @@ public interface WorkGroupMembershipRepository
     @Query("SELECT wgm FROM WorkGroupMembership wgm JOIN FETCH wgm.workGroup WHERE wgm.user.login = :login")
     List<WorkGroupMembership> findByUserLogin(@Param("login") String login);
 
+    @Query("SELECT wgm FROM WorkGroupMembership wgm WHERE wgm.workGroup.id = :workGroupId AND wgm.role = :role")
+    List<WorkGroupMembership> findByWorkGroupIdAndRole(@Param("workGroupId") Long workGroupId, @Param("role") Role role);
 
+    @Query("SELECT wgm FROM WorkGroupMembership wgm WHERE wgm.workGroup.id = :workGroupId AND wgm.user.login = :login")
+    Optional<WorkGroupMembership> findByWorkGroupIdAndUserLogin(@Param("workGroupId") Long workGroupId, @Param("login") String login);
+
+
+    boolean existsByWorkGroupIdAndUserLogin(Long id, String userLogin);
+    boolean existsByUserLoginAndRoleIn(String currentUserLogin, List<Role> owner);
+
+    boolean existsByWorkGroupAndUserLogin(WorkGroup workGroup, String currentUserLogin);
 }

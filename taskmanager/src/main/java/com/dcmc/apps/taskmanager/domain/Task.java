@@ -1,13 +1,13 @@
 package com.dcmc.apps.taskmanager.domain;
 
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskPriority;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A Task.
@@ -34,18 +34,8 @@ public class Task implements Serializable {
     private String description;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "priority", nullable = false)
-    private TaskPriority priority;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private TaskStatus status;
-
-    @NotNull
     @Column(name = "create_time", nullable = false)
-    private Instant createTime;
+    private Instant createTime = Instant.now();
 
     @NotNull
     @Column(name = "update_time", nullable = false)
@@ -55,7 +45,7 @@ public class Task implements Serializable {
     private ZonedDateTime deadline;
 
     @Column(name = "archived")
-    private Boolean archived;
+    private Boolean archived = false;
 
     @Column(name = "archived_date")
     private ZonedDateTime archivedDate;
@@ -64,9 +54,26 @@ public class Task implements Serializable {
     @NotNull
     private WorkGroup workGroup;
 
+    @ManyToOne(optional = false)
+    @NotNull
+    private Priority priority;
+
+    @ManyToOne(optional = false)
+    @NotNull
+    @JsonIgnoreProperties(value = { "workGroup", "createdBy" }, allowSetters = true)
+    private TaskStatusCatalog status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "workGroup" }, allowSetters = true)
     private Project parentProject;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "task", "author" }, allowSetters = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "task", "user" }, allowSetters = true)
+    private List<TaskAssignment> taskAssignments = new ArrayList<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -107,32 +114,6 @@ public class Task implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public TaskPriority getPriority() {
-        return this.priority;
-    }
-
-    public Task priority(TaskPriority priority) {
-        this.setPriority(priority);
-        return this;
-    }
-
-    public void setPriority(TaskPriority priority) {
-        this.priority = priority;
-    }
-
-    public TaskStatus getStatus() {
-        return this.status;
-    }
-
-    public Task status(TaskStatus status) {
-        this.setStatus(status);
-        return this;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
     }
 
     public Instant getCreateTime() {
@@ -213,6 +194,32 @@ public class Task implements Serializable {
         return this;
     }
 
+    public Priority getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public Task priority(Priority priority) {
+        this.setPriority(priority);
+        return this;
+    }
+
+    public TaskStatusCatalog getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(TaskStatusCatalog taskStatusCatalog) {
+        this.status = taskStatusCatalog;
+    }
+
+    public Task status(TaskStatusCatalog taskStatusCatalog) {
+        this.setStatus(taskStatusCatalog);
+        return this;
+    }
+
     public Project getParentProject() {
         return this.parentProject;
     }
@@ -223,6 +230,68 @@ public class Task implements Serializable {
 
     public Task parentProject(Project project) {
         this.setParentProject(project);
+        return this;
+    }
+
+    public List<Comment> getComments() {
+        return this.comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        if (this.comments != null) {
+            this.comments.forEach(i -> i.setTask(null));
+        }
+        if (comments != null) {
+            comments.forEach(i -> i.setTask(this));
+        }
+        this.comments = comments;
+    }
+
+    public Task comments(List<Comment> comments) {
+        this.setComments(comments);
+        return this;
+    }
+
+    public Task addComment(Comment comment) {
+        this.comments.add(comment);
+        comment.setTask(this);
+        return this;
+    }
+
+    public Task removeComment(Comment comment) {
+        this.comments.remove(comment);
+        comment.setTask(null);
+        return this;
+    }
+
+    public List<TaskAssignment> getTaskAssignments() {
+        return this.taskAssignments;
+    }
+
+    public void setTaskAssignments(List<TaskAssignment> taskAssignments) {
+        if (this.taskAssignments != null) {
+            this.taskAssignments.forEach(i -> i.setTask(null));
+        }
+        if (taskAssignments != null) {
+            taskAssignments.forEach(i -> i.setTask(this));
+        }
+        this.taskAssignments = taskAssignments;
+    }
+
+    public Task taskAssignments(List<TaskAssignment> taskAssignments) {
+        this.setTaskAssignments(taskAssignments);
+        return this;
+    }
+
+    public Task addTaskAssignment(TaskAssignment taskAssignment) {
+        this.taskAssignments.add(taskAssignment);
+        taskAssignment.setTask(this);
+        return this;
+    }
+
+    public Task removeTaskAssignment(TaskAssignment taskAssignment) {
+        this.taskAssignments.remove(taskAssignment);
+        taskAssignment.setTask(null);
         return this;
     }
 
@@ -252,8 +321,6 @@ public class Task implements Serializable {
             "id=" + getId() +
             ", title='" + getTitle() + "'" +
             ", description='" + getDescription() + "'" +
-            ", priority='" + getPriority() + "'" +
-            ", status='" + getStatus() + "'" +
             ", createTime='" + getCreateTime() + "'" +
             ", updateTime='" + getUpdateTime() + "'" +
             ", deadline='" + getDeadline() + "'" +

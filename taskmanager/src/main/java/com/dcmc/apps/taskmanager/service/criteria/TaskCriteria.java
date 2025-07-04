@@ -1,7 +1,5 @@
 package com.dcmc.apps.taskmanager.service.criteria;
 
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskPriority;
-import com.dcmc.apps.taskmanager.domain.enumeration.TaskStatus;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,40 +20,6 @@ import tech.jhipster.service.filter.*;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class TaskCriteria implements Serializable, Criteria {
 
-    /**
-     * Class for filtering TaskPriority
-     */
-    public static class TaskPriorityFilter extends Filter<TaskPriority> {
-
-        public TaskPriorityFilter() {}
-
-        public TaskPriorityFilter(TaskPriorityFilter filter) {
-            super(filter);
-        }
-
-        @Override
-        public TaskPriorityFilter copy() {
-            return new TaskPriorityFilter(this);
-        }
-    }
-
-    /**
-     * Class for filtering TaskStatus
-     */
-    public static class TaskStatusFilter extends Filter<TaskStatus> {
-
-        public TaskStatusFilter() {}
-
-        public TaskStatusFilter(TaskStatusFilter filter) {
-            super(filter);
-        }
-
-        @Override
-        public TaskStatusFilter copy() {
-            return new TaskStatusFilter(this);
-        }
-    }
-
     private static final long serialVersionUID = 1L;
 
     private LongFilter id;
@@ -63,10 +27,6 @@ public class TaskCriteria implements Serializable, Criteria {
     private StringFilter title;
 
     private StringFilter description;
-
-    private TaskPriorityFilter priority;
-
-    private TaskStatusFilter status;
 
     private InstantFilter createTime;
 
@@ -80,6 +40,10 @@ public class TaskCriteria implements Serializable, Criteria {
 
     private LongFilter workGroupId;
 
+    private LongFilter priorityId;
+
+    private LongFilter statusId;
+
     private LongFilter parentProjectId;
 
     private Boolean distinct;
@@ -90,14 +54,14 @@ public class TaskCriteria implements Serializable, Criteria {
         this.id = other.optionalId().map(LongFilter::copy).orElse(null);
         this.title = other.optionalTitle().map(StringFilter::copy).orElse(null);
         this.description = other.optionalDescription().map(StringFilter::copy).orElse(null);
-        this.priority = other.optionalPriority().map(TaskPriorityFilter::copy).orElse(null);
-        this.status = other.optionalStatus().map(TaskStatusFilter::copy).orElse(null);
         this.createTime = other.optionalCreateTime().map(InstantFilter::copy).orElse(null);
         this.updateTime = other.optionalUpdateTime().map(InstantFilter::copy).orElse(null);
         this.deadline = other.optionalDeadline().map(ZonedDateTimeFilter::copy).orElse(null);
         this.archived = other.optionalArchived().map(BooleanFilter::copy).orElse(null);
         this.archivedDate = other.optionalArchivedDate().map(ZonedDateTimeFilter::copy).orElse(null);
         this.workGroupId = other.optionalWorkGroupId().map(LongFilter::copy).orElse(null);
+        this.priorityId = other.optionalPriorityId().map(LongFilter::copy).orElse(null);
+        this.statusId = other.optionalStatusId().map(LongFilter::copy).orElse(null);
         this.parentProjectId = other.optionalParentProjectId().map(LongFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
@@ -162,44 +126,6 @@ public class TaskCriteria implements Serializable, Criteria {
 
     public void setDescription(StringFilter description) {
         this.description = description;
-    }
-
-    public TaskPriorityFilter getPriority() {
-        return priority;
-    }
-
-    public Optional<TaskPriorityFilter> optionalPriority() {
-        return Optional.ofNullable(priority);
-    }
-
-    public TaskPriorityFilter priority() {
-        if (priority == null) {
-            setPriority(new TaskPriorityFilter());
-        }
-        return priority;
-    }
-
-    public void setPriority(TaskPriorityFilter priority) {
-        this.priority = priority;
-    }
-
-    public TaskStatusFilter getStatus() {
-        return status;
-    }
-
-    public Optional<TaskStatusFilter> optionalStatus() {
-        return Optional.ofNullable(status);
-    }
-
-    public TaskStatusFilter status() {
-        if (status == null) {
-            setStatus(new TaskStatusFilter());
-        }
-        return status;
-    }
-
-    public void setStatus(TaskStatusFilter status) {
-        this.status = status;
     }
 
     public InstantFilter getCreateTime() {
@@ -274,6 +200,14 @@ public class TaskCriteria implements Serializable, Criteria {
         return archived;
     }
 
+    public TaskCriteria withArchived(Boolean archived) {
+        if (this.archived == null) {
+            this.archived = new BooleanFilter();
+        }
+        this.archived.setEquals(archived);
+        return this;
+    }
+
     public void setArchived(BooleanFilter archived) {
         this.archived = archived;
     }
@@ -314,6 +248,44 @@ public class TaskCriteria implements Serializable, Criteria {
 
     public void setWorkGroupId(LongFilter workGroupId) {
         this.workGroupId = workGroupId;
+    }
+
+    public LongFilter getPriorityId() {
+        return priorityId;
+    }
+
+    public Optional<LongFilter> optionalPriorityId() {
+        return Optional.ofNullable(priorityId);
+    }
+
+    public LongFilter priorityId() {
+        if (priorityId == null) {
+            setPriorityId(new LongFilter());
+        }
+        return priorityId;
+    }
+
+    public void setPriorityId(LongFilter priorityId) {
+        this.priorityId = priorityId;
+    }
+
+    public LongFilter getStatusId() {
+        return statusId;
+    }
+
+    public Optional<LongFilter> optionalStatusId() {
+        return Optional.ofNullable(statusId);
+    }
+
+    public LongFilter statusId() {
+        if (statusId == null) {
+            setStatusId(new LongFilter());
+        }
+        return statusId;
+    }
+
+    public void setStatusId(LongFilter statusId) {
+        this.statusId = statusId;
     }
 
     public LongFilter getParentProjectId() {
@@ -367,14 +339,14 @@ public class TaskCriteria implements Serializable, Criteria {
             Objects.equals(id, that.id) &&
             Objects.equals(title, that.title) &&
             Objects.equals(description, that.description) &&
-            Objects.equals(priority, that.priority) &&
-            Objects.equals(status, that.status) &&
             Objects.equals(createTime, that.createTime) &&
             Objects.equals(updateTime, that.updateTime) &&
             Objects.equals(deadline, that.deadline) &&
             Objects.equals(archived, that.archived) &&
             Objects.equals(archivedDate, that.archivedDate) &&
             Objects.equals(workGroupId, that.workGroupId) &&
+            Objects.equals(priorityId, that.priorityId) &&
+            Objects.equals(statusId, that.statusId) &&
             Objects.equals(parentProjectId, that.parentProjectId) &&
             Objects.equals(distinct, that.distinct)
         );
@@ -386,14 +358,14 @@ public class TaskCriteria implements Serializable, Criteria {
             id,
             title,
             description,
-            priority,
-            status,
             createTime,
             updateTime,
             deadline,
             archived,
             archivedDate,
             workGroupId,
+            priorityId,
+            statusId,
             parentProjectId,
             distinct
         );
@@ -406,14 +378,14 @@ public class TaskCriteria implements Serializable, Criteria {
             optionalId().map(f -> "id=" + f + ", ").orElse("") +
             optionalTitle().map(f -> "title=" + f + ", ").orElse("") +
             optionalDescription().map(f -> "description=" + f + ", ").orElse("") +
-            optionalPriority().map(f -> "priority=" + f + ", ").orElse("") +
-            optionalStatus().map(f -> "status=" + f + ", ").orElse("") +
             optionalCreateTime().map(f -> "createTime=" + f + ", ").orElse("") +
             optionalUpdateTime().map(f -> "updateTime=" + f + ", ").orElse("") +
             optionalDeadline().map(f -> "deadline=" + f + ", ").orElse("") +
             optionalArchived().map(f -> "archived=" + f + ", ").orElse("") +
             optionalArchivedDate().map(f -> "archivedDate=" + f + ", ").orElse("") +
             optionalWorkGroupId().map(f -> "workGroupId=" + f + ", ").orElse("") +
+            optionalPriorityId().map(f -> "priorityId=" + f + ", ").orElse("") +
+            optionalStatusId().map(f -> "statusId=" + f + ", ").orElse("") +
             optionalParentProjectId().map(f -> "parentProjectId=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
