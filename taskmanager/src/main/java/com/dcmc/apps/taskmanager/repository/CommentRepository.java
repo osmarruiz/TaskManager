@@ -17,5 +17,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, JpaSpec
     @Query("select comment from Comment comment where comment.author.login = ?#{authentication.name}")
     List<Comment> findByAuthorIsCurrentUser();
 
-    Optional<Comment> findByTaskOrderByCreateTimeDesc(Task task);
+    List<Comment> findByTaskOrderByCreateTimeDesc(Task task);
 }

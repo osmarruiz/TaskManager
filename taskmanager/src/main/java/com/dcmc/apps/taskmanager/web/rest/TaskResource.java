@@ -187,9 +187,9 @@ public class TaskResource {
 
     @GetMapping("/{id}/assignments")
     public ResponseEntity<List<TaskAssignmentDTO>> getTaskAssignments(
-        @PathVariable Long taskId) {
+        @PathVariable Long id) {
 
-        List<TaskAssignmentDTO> assignments = taskService.getTaskAssignments(taskId);
+        List<TaskAssignmentDTO> assignments = taskService.getTaskAssignments(id);
         return ResponseEntity.ok(assignments);
     }
 
@@ -209,7 +209,7 @@ public class TaskResource {
             .build();
     }
 
-    @PostMapping("/tasks/{taskId}/comments")
+    @PostMapping("/{taskId}/comments")
     public ResponseEntity<CommentDTO> addCommentToTask(
         @PathVariable Long taskId,
         @RequestBody String content) {
@@ -219,7 +219,7 @@ public class TaskResource {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/tasks/{taskId}/comments")
+    @GetMapping("/{taskId}/comments")
     public ResponseEntity<List<CommentDTO>> getTaskComments(
         @PathVariable Long taskId) {
 
@@ -289,6 +289,12 @@ public class TaskResource {
     @PostMapping("/{id}/archive")
     public ResponseEntity<Void> archiveTask(@PathVariable Long id) {
         taskService.archiveTask(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/unarchive")
+    public ResponseEntity<Void> unarchiveTask(@PathVariable Long id) {
+        taskService.unarchiveTask(id);
         return ResponseEntity.ok().build();
     }
 }

@@ -35,7 +35,6 @@ import tech.jhipster.web.util.ResponseUtil;
  */
 @RestController
 @RequestMapping("/api/priorities")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class PriorityResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(PriorityResource.class);
@@ -68,6 +67,8 @@ public class PriorityResource {
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new priorityDTO, or with status {@code 400 (Bad Request)} if the priority has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("")
     public ResponseEntity<PriorityDTO> createPriority(@Valid @RequestBody CreatePriorityDTO priorityDTO) throws URISyntaxException {
         LOG.debug("REST request to save Priority : {}", priorityDTO);
@@ -88,6 +89,8 @@ public class PriorityResource {
      * or with status {@code 500 (Internal Server Error)} if the priorityDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PriorityDTO> updatePriority(
         @PathVariable(value = "id", required = false) final Long id,
@@ -139,6 +142,8 @@ public class PriorityResource {
         );
     }
 
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping("/{id}/visibility")
     public ResponseEntity<PriorityDTO> updateVisibility(
         @PathVariable Long id,
@@ -154,6 +159,7 @@ public class PriorityResource {
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of priorities in body.
      */
+
     @GetMapping("")
     public ResponseEntity<List<PriorityDTO>> getAllPriorities(
         PriorityCriteria criteria,
@@ -198,6 +204,8 @@ public class PriorityResource {
      * @param id the id of the priorityDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePriority(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Priority : {}", id);

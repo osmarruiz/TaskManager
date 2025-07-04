@@ -56,10 +56,15 @@ const TaskForm: React.FC<Props> = ({ onSuccess, taskToEdit }) => {
     setSaving(true);
     setError(null);
     try {
+      const formToSend = { ...form };
+      if (form.deadline) {
+        const fecha = typeof form.deadline === 'string' ? new Date(form.deadline) : form.deadline;
+        formToSend.deadline = fecha.toISOString();
+      }
       if (taskToEdit && taskToEdit.id) {
-        await updateTask(taskToEdit.id, form as Task);
+        await updateTask(taskToEdit.id, formToSend as Task);
       } else {
-        await createTask(form as Task);
+        await createTask(formToSend as Task);
       }
       onSuccess();
     } catch (err) {

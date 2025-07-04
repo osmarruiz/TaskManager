@@ -19,7 +19,7 @@ import org.mapstruct.*;
 public interface TaskMapper extends EntityMapper<TaskDTO, Task> {
     @Mapping(target = "workGroup", source = "workGroup", qualifiedByName = "workGroupId")
     @Mapping(target = "priority", source = "priority", qualifiedByName = "priorityId")
-    @Mapping(target = "status", source = "status", qualifiedByName = "taskStatusCatalogId")
+    @Mapping(target = "status", source = "status")
     @Mapping(target = "parentProject", source = "parentProject", qualifiedByName = "projectId")
     TaskDTO toDto(Task s);
 

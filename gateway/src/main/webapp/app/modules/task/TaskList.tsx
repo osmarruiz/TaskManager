@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getTasks, deleteTask, archiveTask } from '../../shared/util/task-api';
+import { getTasks, deleteTask, archiveTask, unarchiveTask } from '../../shared/util/task-api';
 import { Task } from '../../shared/model/task.model';
 import TaskForm from './TaskForm';
 import TaskDetail from './TaskDetail';
@@ -25,15 +25,37 @@ const TaskList: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     if (window.confirm('¿Seguro que deseas eliminar esta tarea?')) {
-      await deleteTask(id);
-      loadTasks();
+      try {
+        await deleteTask(id);
+        loadTasks();
+      } catch (error) {
+        console.error('Error al eliminar tarea:', error);
+        alert('No se puede eliminar esta tarea. Asegúrate de que esté archivada primero.');
+      }
     }
   };
 
   const handleArchive = async (id: number) => {
     if (window.confirm('¿Seguro que deseas archivar esta tarea?')) {
-      await archiveTask(id);
-      loadTasks();
+      try {
+        await archiveTask(id);
+        loadTasks();
+      } catch (error) {
+        console.error('Error al archivar tarea:', error);
+        alert('No se puede archivar esta tarea. Asegúrate de que esté en estado "DONE".');
+      }
+    }
+  };
+
+  const handleUnarchive = async (id: number) => {
+    if (window.confirm('¿Seguro que deseas desarchivar esta tarea?')) {
+      try {
+        await unarchiveTask(id);
+        loadTasks();
+      } catch (error) {
+        console.error('Error al desarchivar tarea:', error);
+        alert('Error al desarchivar la tarea.');
+      }
     }
   };
 
@@ -95,9 +117,15 @@ const TaskList: React.FC = () => {
                 <button className="btn btn-primary btn-sm me-2" onClick={() => setTaskToEdit(task)}>
                   Editar
                 </button>
-                <button className="btn btn-warning btn-sm me-2" onClick={() => handleArchive(task.id)}>
-                  Archivar
-                </button>
+                {task.archived ? (
+                  <button className="btn btn-success btn-sm me-2" onClick={() => handleUnarchive(task.id)}>
+                    Desarchivar
+                  </button>
+                ) : (
+                  <button className="btn btn-warning btn-sm me-2" onClick={() => handleArchive(task.id)}>
+                    Archivar
+                  </button>
+                )}
                 <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id)}>
                   Eliminar
                 </button>

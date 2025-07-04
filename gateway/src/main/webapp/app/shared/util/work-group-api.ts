@@ -1,6 +1,7 @@
 import taskManagerApi from './TaskManagerApiService';
 import { WorkGroup } from '../model/work-group.model';
 import { UserWorkGroup } from '../model/user-work-group.model';
+import { MemberWithRole } from '../model/member-with-role.model';
 
 export const getWorkGroups = async (): Promise<WorkGroup[]> => {
   const response = await taskManagerApi.api.get<WorkGroup[]>('/work-groups');
@@ -46,8 +47,8 @@ export const removeMember = async (id: number, userLogin: string): Promise<void>
   await taskManagerApi.api.delete(`/work-groups/${id}/members`, { data: { userLogin } });
 };
 
-export const getMembers = async (id: number): Promise<any[]> => {
-  const response = await taskManagerApi.api.get<any[]>(`/work-groups/${id}/members`);
+export const getMembers = async (id: number): Promise<MemberWithRole[]> => {
+  const response = await taskManagerApi.api.get<MemberWithRole[]>(`/work-groups/${id}/members`);
   return response.data;
 };
 

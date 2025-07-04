@@ -48,7 +48,7 @@ const TaskComments: React.FC<Props> = ({ taskId }) => {
       <ul className="list-group mb-3">
         {comments.map(c => (
           <li key={c.id} className="list-group-item">
-            <b>{c.author?.login || 'Usuario'}:</b> {c.content}
+            <b>{c.author?.id ? ` ${c.author.id}` : 'Usuario'}:</b> {c.content}
             <div className="text-muted" style={{ fontSize: '0.8em' }}>
               {c.createTime}
             </div>

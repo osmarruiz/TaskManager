@@ -50,7 +50,9 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
       setAllUsers(u);
       setProjects(p);
       const current = m.find(mem => mem.userLogin === account.login);
-      setUserRole(current ? current.role : '');
+      const roleValue = current ? current.role : '';
+      console.warn('Setting userRole:', roleValue, 'for user:', account.login);
+      setUserRole(roleValue);
       setLoading(false);
     });
   };
@@ -150,9 +152,27 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
   if (!group) return <div>No se encontró el grupo.</div>;
 
   const canTransferOwnership = isAdmin || userRole === 'OWNER';
-  const canAddRemoveModerator = isAdmin || userRole === 'OWNER';
-  const canAddRemoveMember = isAdmin || userRole === 'OWNER' || userRole === 'MODERADOR';
+  const canAddModerator = isAdmin || userRole === 'OWNER' || userRole === 'MODERADOR';
+  const canRemoveModerator = isAdmin || userRole === 'OWNER';
+  const canAddMember = isAdmin || userRole === 'OWNER' || userRole === 'MODERADOR';
+  const canRemoveMember = isAdmin || userRole === 'OWNER';
   const canLeaveGroup = isAdmin || userRole === 'MODERADOR' || userRole === 'MIEMBRO';
+
+  // Debug: Mostrar información de permisos
+  console.warn('=== DEBUG WORKGROUP PERMISOS ===');
+  console.warn('User login:', account.login);
+  console.warn('User role:', userRole);
+  console.warn('User role type:', typeof userRole);
+  console.warn('User role === "MIEMBRO":', userRole === 'MIEMBRO');
+  console.warn('User role === "MODERADOR":', userRole === 'MODERADOR');
+  console.warn('User role === "OWNER":', userRole === 'OWNER');
+  console.warn('isAdmin:', isAdmin);
+  console.warn('canAddMember:', canAddMember, '(ADMIN || OWNER || MODERADOR)');
+  console.warn('canRemoveMember:', canRemoveMember, '(ADMIN || OWNER)');
+  console.warn('canAddModerator:', canAddModerator, '(ADMIN || OWNER || MODERADOR)');
+  console.warn('canRemoveModerator:', canRemoveModerator, '(ADMIN || OWNER)');
+  console.warn('canTransferOwnership:', canTransferOwnership, '(ADMIN || OWNER)');
+  console.warn('=== FIN DEBUG ===');
 
   // Filtrar miembros para transferir ownership (excluir al OWNER actual)
   const membersForOwnershipTransfer = members.filter(m => m.role !== 'OWNER');
@@ -189,7 +209,7 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
         </button>
       </div>
       {/* Botón para agregar proyecto */}
-      {(isAdmin || userRole === 'OWNER') && (
+      {(isAdmin || userRole === 'OWNER' || userRole === 'MODERADOR') && (
         <button className="btn btn-success mb-3" onClick={() => setShowProjectForm(true)}>
           + Agregar proyecto
         </button>
@@ -234,25 +254,24 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
         ))}
         {projects.length === 0 && <li className="list-group-item">Sin proyectos</li>}
       </ul>
-      <h5 className="mt-4">Agregar miembro</h5>
-      <form onSubmit={handleAddMember} className="mb-3 d-flex">
-        <select className="form-control me-2" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} required>
-          <option value="">Selecciona usuario</option>
-          {availableUsers.map(u => (
-            <option key={u.id} value={u.login}>
-              {u.login} ({u.firstName} {u.lastName})
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-success" type="submit" disabled={saving || !selectedUser}>
-          Agregar
-        </button>
-      </form>
-      {/* Debug info - remover en producción */}
-      <div className="small text-muted mb-2">
-        <strong>Debug:</strong> {allUsers.length} usuarios totales, {members.length} miembros actuales,
-        {availableUsers.length} usuarios disponibles
-      </div>
+      {canAddMember && (
+        <div>
+          <h5 className="mt-4">Agregar miembro</h5>
+          <form onSubmit={handleAddMember} className="mb-3 d-flex">
+            <select className="form-control me-2" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} required>
+              <option value="">Selecciona usuario</option>
+              {availableUsers.map(u => (
+                <option key={u.id} value={u.login}>
+                  {u.login} ({u.firstName} {u.lastName})
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-success" type="submit" disabled={saving || !selectedUser}>
+              Agregar
+            </button>
+          </form>
+        </div>
+      )}
       <h5 className="mt-4">Miembros</h5>
       <ul className="list-group mb-3">
         {members.map(m => (
@@ -260,7 +279,7 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
             <span>
               {m.userLogin} ({m.userName}) - {m.role}
             </span>
-            {canAddRemoveMember && m.role !== 'OWNER' && (
+            {canRemoveMember && m.role !== 'OWNER' && (
               <button className="btn btn-danger btn-sm" onClick={() => handleRemoveMember(m.userLogin)}>
                 Quitar
               </button>
@@ -288,7 +307,7 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
         </>
       )}
       <h5 className="mt-4">Moderadores</h5>
-      {canAddRemoveModerator && (
+      {canAddModerator && (
         <form onSubmit={handleAddModerator} className="mb-3 d-flex">
           <select className="form-control me-2" value={selectedModerator} onChange={e => setSelectedModerator(e.target.value)} required>
             <option value="">Selecciona usuario</option>
@@ -311,7 +330,7 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
               <span>
                 {m.userLogin} ({m.userName})
               </span>
-              {canAddRemoveModerator && (
+              {canRemoveModerator && (
                 <button className="btn btn-danger btn-sm" onClick={() => handleRemoveModerator(m.userLogin)}>
                   Quitar moderador
                 </button>

@@ -304,10 +304,6 @@ public class TaskService {
 
         // Verificar que el usuario actual es miembro del grupo de trabajo
         String currentUserLogin = getCurrentUserLogin();
-        if (workGroupMembershipRepository.existsByWorkGroupAndUserLogin(
-            task.getWorkGroup(), currentUserLogin)) {
-            throw new AccessDeniedException("User is not member of task's work group");
-        }
 
         User author = getUserByLogin(currentUserLogin);
 
@@ -326,12 +322,6 @@ public class TaskService {
 
         Task task = getTaskById(taskId);
 
-        // Verificar que el usuario actual es miembro del grupo de trabajo
-        String currentUserLogin = getCurrentUserLogin();
-        if (workGroupMembershipRepository.existsByWorkGroupAndUserLogin(
-            task.getWorkGroup(), currentUserLogin)) {
-            throw new AccessDeniedException("User is not member of task's work group");
-        }
 
         return commentRepository.findByTaskOrderByCreateTimeDesc(task).stream()
             .map(commentMapper::toDto)
@@ -389,11 +379,25 @@ public class TaskService {
         taskRepository.save(task);
     }
 
+    public void unarchiveTask(Long taskId) {
+        LOG.debug("Request to unarchive task {}", taskId);
+
+        Task task = taskRepository.findByIdAndArchivedTrue(taskId)
+            .orElseThrow(() -> new RuntimeException("Archived task not found with id: " + taskId));
+        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
+        task.setArchived(false);
+        task.setArchivedDate(null);
+        taskRepository.save(task);
+    }
+
     public void deleteArchivedTask(Long taskId) {
         LOG.debug("Request to delete archived task {}", taskId);
 
         Task task = taskRepository.findByIdAndArchivedTrue(taskId)
             .orElseThrow(() -> new RuntimeException("Archived task not found with id: " + taskId));
+
+        // Validar permisos usando la misma lógica que deleteTaskFromProject
         validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         taskRepository.delete(task);

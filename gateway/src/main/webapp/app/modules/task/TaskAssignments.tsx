@@ -6,9 +6,10 @@ import { IUser } from '../../shared/model/user.model';
 
 interface Props {
   taskId: number;
+  canManage: boolean;
 }
 
-const TaskAssignments: React.FC<Props> = ({ taskId }) => {
+const TaskAssignments: React.FC<Props> = ({ taskId, canManage }) => {
   const [assignments, setAssignments] = useState<TaskAssignment[]>([]);
   const [users, setUsers] = useState<IUser[]>([]);
   const [selectedUser, setSelectedUser] = useState('');
@@ -69,28 +70,32 @@ const TaskAssignments: React.FC<Props> = ({ taskId }) => {
         {assignments.map(a => (
           <li key={a.id} className="list-group-item d-flex justify-content-between align-items-center">
             <span>
-              {a.user?.login || 'Usuario'} ({a.user?.email})
+              {a.user?.id ? `ID: ${a.user.id}` : 'Usuario'} ({a.user?.email})
             </span>
-            <button className="btn btn-sm btn-danger" onClick={() => handleUnassign(a.user?.login || '')}>
-              Desasignar
-            </button>
+            {canManage && (
+              <button className="btn btn-sm btn-danger" onClick={() => handleUnassign(a.user?.login || '')}>
+                Desasignar
+              </button>
+            )}
           </li>
         ))}
         {assignments.length === 0 && <li className="list-group-item">Sin usuarios asignados</li>}
       </ul>
-      <form onSubmit={handleAssign} className="d-flex">
-        <select className="form-control me-2" value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
-          <option value="">Selecciona usuario</option>
-          {users.map(u => (
-            <option key={u.login} value={u.login}>
-              {u.login} ({u.email})
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-primary" type="submit" disabled={saving || !selectedUser}>
-          {saving ? 'Asignando...' : 'Asignar'}
-        </button>
-      </form>
+      {canManage && (
+        <form onSubmit={handleAssign} className="d-flex">
+          <select className="form-control me-2" value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
+            <option value="">Selecciona usuario</option>
+            {users.map(u => (
+              <option key={u.login} value={u.login}>
+                {u.login} ({u.email})
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-primary" type="submit" disabled={saving || !selectedUser}>
+            {saving ? 'Asignando...' : 'Asignar'}
+          </button>
+        </form>
+      )}
     </div>
   );
 };

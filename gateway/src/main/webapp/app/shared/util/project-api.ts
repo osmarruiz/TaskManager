@@ -49,3 +49,7 @@ export const getProjectMembers = async (projectId: number): Promise<ProjectMembe
   const response = await taskManagerApi.api.get<ProjectMember[]>(`/projects/${projectId}/members`);
   return response.data;
 };
+
+export const removeMemberFromProject = async (projectId: number, memberId: number): Promise<void> => {
+  await taskManagerApi.api.delete(`/projects/${projectId}/members/${memberId}`);
+};

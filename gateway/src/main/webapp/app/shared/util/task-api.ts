@@ -22,9 +22,21 @@ export const updateTask = async (id: number, task: Task): Promise<Task> => {
 };
 
 export const deleteTask = async (id: number): Promise<void> => {
-  await taskManagerApi.api.delete(`/tasks/${id}`);
+  await taskManagerApi.api.delete(`/archived-tasks/${id}`);
 };
 
 export const archiveTask = async (id: number): Promise<void> => {
   await taskManagerApi.api.post(`/tasks/${id}/archive`);
+};
+
+export const unarchiveTask = async (id: number): Promise<void> => {
+  await taskManagerApi.api.post(`/tasks/${id}/unarchive`);
+};
+
+export const changeTaskPriority = async (id: number, priority: string): Promise<void> => {
+  await taskManagerApi.api.put(`/tasks/${id}/priority?priority=${encodeURIComponent(priority)}`);
+};
+
+export const changeTaskStatus = async (id: number, status: string): Promise<void> => {
+  await taskManagerApi.api.put(`/tasks/${id}/status?status=${encodeURIComponent(status)}`);
 };
