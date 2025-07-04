@@ -1,46 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getTaskComments, addCommentToTask } from '../../shared/util/comment-api';
 import { Comment } from '../../shared/model/comment.model';
+import { useLoading } from '../../shared/hooks/useLoading';
+import { useApiError } from '../../shared/hooks/useApiError';
 
 interface Props {
   taskId: number;
 }
 
 const TaskComments: React.FC<Props> = ({ taskId }) => {
+  const { loading, error, startLoading, stopLoading, setLoadingError } = useLoading(true);
+  const { handleError } = useApiError();
   const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadComments = () => {
-    setLoading(true);
+  const loadComments = useCallback(() => {
+    startLoading();
     getTaskComments(taskId)
       .then(data => {
         setComments(data);
-        setLoading(false);
+        stopLoading();
       })
       .catch(err => {
-        console.error('Error loading comments:', err);
+        handleError(err, 'Error al cargar comentarios');
         setComments([]);
-        setLoading(false);
+        setLoadingError('No se pudieron cargar los comentarios');
       });
-  };
+  }, [taskId, startLoading, stopLoading, setLoadingError, handleError]);
 
   useEffect(() => {
     loadComments();
-  }, [taskId]);
+  }, [loadComments]);
 
-  const handleAddComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    setSaving(true);
-    await addCommentToTask(taskId, newComment);
-    setNewComment('');
-    setSaving(false);
-    loadComments();
-  };
+  const handleAddComment = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newComment.trim()) return;
+      setSaving(true);
+      try {
+        await addCommentToTask(taskId, newComment);
+        setNewComment('');
+        loadComments();
+      } catch (err) {
+        handleError(err, 'Error al agregar comentario');
+      } finally {
+        setSaving(false);
+      }
+    },
+    [taskId, newComment, loadComments, handleError],
+  );
 
-  if (loading) return <div>Cargando comentarios...</div>;
+  if (loading)
+    return (
+      <div className="text-center py-3">
+        <div className="spinner-border spinner-border-sm" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+        <span className="ms-2">Cargando comentarios...</span>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="alert alert-danger">
+        <i className="fas fa-exclamation-triangle me-2"></i>
+        {error}
+      </div>
+    );
 
   return (
     <div>
@@ -63,9 +90,25 @@ const TaskComments: React.FC<Props> = ({ taskId }) => {
           onChange={e => setNewComment(e.target.value)}
           placeholder="Escribe un comentario..."
           disabled={saving}
+          aria-label="Nuevo comentario"
         />
-        <button className="btn btn-primary" type="submit" disabled={saving || !newComment.trim()}>
-          {saving ? 'Enviando...' : 'Comentar'}
+        <button
+          className="btn btn-primary"
+          type="submit"
+          disabled={saving || !newComment.trim()}
+          aria-label={saving ? 'Enviando comentario...' : 'Agregar comentario'}
+        >
+          {saving ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Enviando...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-paper-plane me-2" aria-hidden="true"></i>
+              Comentar
+            </>
+          )}
         </button>
       </form>
     </div>

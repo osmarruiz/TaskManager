@@ -9,14 +9,7 @@
         Added the constraints for entity TaskStatusCatalog.
     -->
     <changeSet id="20250619002102-2" author="jhipster">
-
-        <addForeignKeyConstraint baseColumnNames="work_group_id"
-                                 baseTableName="task_status_catalog"
-                                 constraintName="fk_task_status_catalog__work_group_id"
-                                 referencedColumnNames="id"
-                                 referencedTableName="work_group"
-                                 />
-
+    
         <addForeignKeyConstraint baseColumnNames="created_by_id"
                                  baseTableName="task_status_catalog"
                                  constraintName="fk_task_status_catalog__created_by_id"

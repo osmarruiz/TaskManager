@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20250704000000-1" author="jhipster">
+        <!-- Eliminar las restricciones de clave foránea existentes -->
+        <dropForeignKeyConstraint baseTableName="comment" constraintName="fk_comment__task_id"/>
+        <dropForeignKeyConstraint baseTableName="task_assignment" constraintName="fk_task_assignment__task_id"/>
+        
+        <!-- Agregar las nuevas restricciones con eliminación en cascada -->
+        <addForeignKeyConstraint 
+            baseColumnNames="task_id"
+            baseTableName="comment"
+            constraintName="fk_comment__task_id"
+            referencedColumnNames="id"
+            referencedTableName="task"
+            onDelete="CASCADE"/>
+            
+        <addForeignKeyConstraint 
+            baseColumnNames="task_id"
+            baseTableName="task_assignment"
+            constraintName="fk_task_assignment__task_id"
+            referencedColumnNames="id"
+            referencedTableName="task"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog> 

@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A Task.
@@ -64,6 +66,14 @@ public class Task implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "workGroup" }, allowSetters = true)
     private Project parentProject;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "task", "author" }, allowSetters = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "task", "user" }, allowSetters = true)
+    private List<TaskAssignment> taskAssignments = new ArrayList<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -220,6 +230,68 @@ public class Task implements Serializable {
 
     public Task parentProject(Project project) {
         this.setParentProject(project);
+        return this;
+    }
+
+    public List<Comment> getComments() {
+        return this.comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        if (this.comments != null) {
+            this.comments.forEach(i -> i.setTask(null));
+        }
+        if (comments != null) {
+            comments.forEach(i -> i.setTask(this));
+        }
+        this.comments = comments;
+    }
+
+    public Task comments(List<Comment> comments) {
+        this.setComments(comments);
+        return this;
+    }
+
+    public Task addComment(Comment comment) {
+        this.comments.add(comment);
+        comment.setTask(this);
+        return this;
+    }
+
+    public Task removeComment(Comment comment) {
+        this.comments.remove(comment);
+        comment.setTask(null);
+        return this;
+    }
+
+    public List<TaskAssignment> getTaskAssignments() {
+        return this.taskAssignments;
+    }
+
+    public void setTaskAssignments(List<TaskAssignment> taskAssignments) {
+        if (this.taskAssignments != null) {
+            this.taskAssignments.forEach(i -> i.setTask(null));
+        }
+        if (taskAssignments != null) {
+            taskAssignments.forEach(i -> i.setTask(this));
+        }
+        this.taskAssignments = taskAssignments;
+    }
+
+    public Task taskAssignments(List<TaskAssignment> taskAssignments) {
+        this.setTaskAssignments(taskAssignments);
+        return this;
+    }
+
+    public Task addTaskAssignment(TaskAssignment taskAssignment) {
+        this.taskAssignments.add(taskAssignment);
+        taskAssignment.setTask(this);
+        return this;
+    }
+
+    public Task removeTaskAssignment(TaskAssignment taskAssignment) {
+        this.taskAssignments.remove(taskAssignment);
+        taskAssignment.setTask(null);
         return this;
     }
 

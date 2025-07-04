@@ -49,7 +49,13 @@ const getErrorMessage = (status: number, data: any): string => {
 const handleFieldErrors = (fieldErrors: Array<{ field: string; message: string }>): void => {
   if (fieldErrors && Array.isArray(fieldErrors)) {
     fieldErrors.forEach(fieldError => {
-      const fieldName = fieldError.field?.replace(/\[\d*\]/g, '[]') || 'Campo';
+      const fieldName =
+        fieldError.field
+          ?.replace(/\[\d*\]/g, '[]')
+          .split('.')
+          .pop()
+          ?.replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase()) || 'Campo';
       const message = fieldError.message || 'Error de validación';
       toast.error(`${fieldName}: ${message}`);
     });

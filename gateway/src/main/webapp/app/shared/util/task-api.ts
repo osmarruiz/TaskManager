@@ -22,7 +22,7 @@ export const updateTask = async (id: number, task: Task): Promise<Task> => {
 };
 
 export const deleteTask = async (id: number): Promise<void> => {
-  await taskManagerApi.api.delete(`/archived-tasks/${id}`);
+  await taskManagerApi.api.delete(`/tasks/archived-tasks/${id}`);
 };
 
 export const archiveTask = async (id: number): Promise<void> => {
