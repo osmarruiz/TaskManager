@@ -160,6 +160,22 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
   // Filtrar miembros para agregar como moderadores (excluir al OWNER actual y moderadores existentes)
   const membersForModerator = members.filter(m => m.role !== 'OWNER' && m.role !== 'MODERADOR');
 
+  // Función para obtener usuarios disponibles para agregar como miembros
+  const getAvailableUsers = () => {
+    return allUsers.filter(user => {
+      // Verificar si el usuario ya es miembro del grupo
+      const isAlreadyMember = members.some(member => {
+        // Comparar usando diferentes campos posibles
+        return (
+          member.userLogin === user.login || member.userId === user.id || member.user?.login === user.login || member.user?.id === user.id
+        );
+      });
+      return !isAlreadyMember;
+    });
+  };
+
+  const availableUsers = getAvailableUsers();
+
   if (selectedProjectId) {
     return <ProjectDetail id={selectedProjectId} onBack={() => setSelectedProjectId(null)} />;
   }
@@ -222,18 +238,21 @@ const WorkGroupDetail: React.FC<Props> = ({ id, onBack }) => {
       <form onSubmit={handleAddMember} className="mb-3 d-flex">
         <select className="form-control me-2" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} required>
           <option value="">Selecciona usuario</option>
-          {allUsers
-            .filter(u => !members.some(m => m.userLogin === u.login))
-            .map(u => (
-              <option key={u.id} value={u.login}>
-                {u.login} ({u.firstName} {u.lastName})
-              </option>
-            ))}
+          {availableUsers.map(u => (
+            <option key={u.id} value={u.login}>
+              {u.login} ({u.firstName} {u.lastName})
+            </option>
+          ))}
         </select>
         <button className="btn btn-success" type="submit" disabled={saving || !selectedUser}>
           Agregar
         </button>
       </form>
+      {/* Debug info - remover en producción */}
+      <div className="small text-muted mb-2">
+        <strong>Debug:</strong> {allUsers.length} usuarios totales, {members.length} miembros actuales,
+        {availableUsers.length} usuarios disponibles
+      </div>
       <h5 className="mt-4">Miembros</h5>
       <ul className="list-group mb-3">
         {members.map(m => (

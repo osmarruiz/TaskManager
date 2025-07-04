@@ -1,6 +1,7 @@
 import taskManagerApi from './TaskManagerApiService';
 import { Project } from '../model/project.model';
 import { Task } from '../model/task.model';
+import { ProjectMember } from '../model/project-member.model';
 
 export const getProjects = async (): Promise<Project[]> => {
   const response = await taskManagerApi.api.get<Project[]>('/projects');
@@ -41,5 +42,10 @@ export const assignUserToProject = async (id: number, userLogin: string): Promis
 
 export const getProjectsByWorkGroupId = async (workGroupId: number): Promise<Project[]> => {
   const response = await taskManagerApi.api.get<Project[]>(`/projects/by-workgroup/${workGroupId}`);
+  return response.data;
+};
+
+export const getProjectMembers = async (projectId: number): Promise<ProjectMember[]> => {
+  const response = await taskManagerApi.api.get<ProjectMember[]>(`/projects/${projectId}/members`);
   return response.data;
 };

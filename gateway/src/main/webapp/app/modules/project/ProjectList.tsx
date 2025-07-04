@@ -1,28 +1,52 @@
 import React, { useEffect, useState } from 'react';
-import { getProjects, deleteProject } from '../../shared/util/project-api';
+import { getProjects } from '../../shared/util/project-api';
+import { getWorkGroup } from '../../shared/util/work-group-api';
 import { Project } from '../../shared/model/project.model';
+import { WorkGroup } from '../../shared/model/work-group.model';
 import ProjectForm from './ProjectForm';
 import ProjectDetail from './ProjectDetail';
 
 const ProjectList: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [workGroups, setWorkGroups] = useState<Map<number, WorkGroup>>(new Map());
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-  const loadProjects = () => {
+  const loadProjects = async () => {
     setLoading(true);
-    getProjects().then(data => {
-      setProjects(data);
-      setLoading(false);
-    });
-  };
+    try {
+      const projectsData = await getProjects();
+      setProjects(projectsData);
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('¿Seguro que deseas eliminar este proyecto?')) {
-      await deleteProject(id);
-      loadProjects();
+      // Obtener información de WorkGroups únicos
+      const uniqueWorkGroupIds = [...new Set(projectsData.filter(project => project.workGroup?.id).map(project => project.workGroup.id))];
+
+      const workGroupsMap = new Map<number, WorkGroup>();
+
+      // Obtener información de cada WorkGroup en paralelo
+      const workGroupPromises = uniqueWorkGroupIds.map(async workGroupId => {
+        try {
+          const workGroup = await getWorkGroup(workGroupId);
+          return { id: workGroupId, workGroup };
+        } catch (error) {
+          console.error(`Error obteniendo WorkGroup ${workGroupId}:`, error);
+          return null;
+        }
+      });
+
+      const workGroupResults = await Promise.all(workGroupPromises);
+      workGroupResults.forEach(result => {
+        if (result) {
+          workGroupsMap.set(result.id, result.workGroup);
+        }
+      });
+
+      setWorkGroups(workGroupsMap);
+    } catch (error) {
+      console.error('Error cargando proyectos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,18 +55,6 @@ const ProjectList: React.FC = () => {
   }, []);
 
   if (loading) return <div>Cargando proyectos...</div>;
-
-  if (projectToEdit) {
-    return (
-      <ProjectForm
-        projectToEdit={projectToEdit}
-        onSuccess={() => {
-          setProjectToEdit(null);
-          loadProjects();
-        }}
-      />
-    );
-  }
 
   if (selectedProjectId) {
     return <ProjectDetail id={selectedProjectId} onBack={() => setSelectedProjectId(null)} />;
@@ -82,16 +94,10 @@ const ProjectList: React.FC = () => {
               <td>{project.description}</td>
               <td>{project.startDate}</td>
               <td>{project.endDate}</td>
-              <td>{project.workGroup?.name}</td>
+              <td>{project.workGroup?.id ? workGroups.get(project.workGroup.id)?.name || 'Cargando...' : 'Sin grupo asignado'}</td>
               <td>
                 <button className="btn btn-info btn-sm me-2" onClick={() => setSelectedProjectId(project.id)}>
                   Ver
-                </button>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => setProjectToEdit(project)}>
-                  Editar
-                </button>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(project.id)}>
-                  Eliminar
                 </button>
               </td>
             </tr>

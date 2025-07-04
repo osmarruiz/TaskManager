@@ -261,4 +261,13 @@ public class ProjectResource {
         ProjectMemberDTO result = projectService.assignUserToProject(id, assignProjectToUserDTO);
         return ResponseEntity.ok().body(result);
     }
+
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<ProjectMemberDTO>> getProjectMembers(
+        @PathVariable Long id) {
+
+        LOG.debug("REST request to get members for Project : {}", id);
+        List<ProjectMemberDTO> members = projectService.getProjectMembers(id);
+        return ResponseEntity.ok().body(members);
+    }
 }

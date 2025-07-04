@@ -214,5 +214,19 @@ public class ProjectService {
         return projectMemberMapper.toDto(savedMember);
     }
 
+    @Transactional(readOnly = true)
+    public List<ProjectMemberDTO> getProjectMembers(Long projectId) {
+        LOG.debug("Request to get members for Project : {}", projectId);
+        
+        // Validate that the project exists
+        if (!projectRepository.existsById(projectId)) {
+            throw new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound");
+        }
+
+        return projectMemberRepository.findByProjectId(projectId)
+            .stream()
+            .map(projectMemberMapper::toDto)
+            .collect(Collectors.toList());
+    }
 
 }
