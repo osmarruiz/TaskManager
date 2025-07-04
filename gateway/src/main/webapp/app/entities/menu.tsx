@@ -23,11 +23,9 @@ const EntitiesMenu = () => {
       <MenuItem icon="users" to="/grupos">
         Grupos de trabajo
       </MenuItem>
-      {isAdmin && (
-        <MenuItem icon="project-diagram" to="/proyectos">
-          Proyectos
-        </MenuItem>
-      )}
+      <MenuItem icon="users" to="/proyectos">
+        Proyectos
+      </MenuItem>
       {/* Submenú de Gestión Principal */}
       <MenuItem icon="tasks" to="/tareas">
         Tareas
@@ -44,7 +42,7 @@ const EntitiesMenu = () => {
 
       {/* Submenú de Configuración */}
       {isAdmin && (
-        <MenuItem icon="cog" to="/prioridades">
+        <MenuItem icon="flag" to="/prioridades">
           Prioridades
         </MenuItem>
       )}

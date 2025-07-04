@@ -31,7 +31,6 @@ import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
 
-
 /**
  * REST controller for managing {@link com.dcmc.apps.taskmanager.domain.Project}.
  */
@@ -54,8 +53,12 @@ public class ProjectResource {
 
     private final TaskService taskService;
 
-    public ProjectResource(ProjectService projectService, ProjectRepository projectRepository, ProjectQueryService projectQueryService,
-                          TaskService taskService) {
+    public ProjectResource(
+        ProjectService projectService,
+        ProjectRepository projectRepository,
+        ProjectQueryService projectQueryService,
+        TaskService taskService
+    ) {
         this.projectService = projectService;
         this.projectRepository = projectRepository;
         this.projectQueryService = projectQueryService;
@@ -215,40 +218,28 @@ public class ProjectResource {
     // Custom endpoint to get projects by work group ID
 
     @GetMapping("/by-workgroup/{workGroupId}")
-    public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(
-        @PathVariable Long workGroupId
-    ) {
+    public ResponseEntity<List<ProjectDTO>> getProjectsByWorkGroupId(@PathVariable Long workGroupId) {
         LOG.debug("REST request to get Projects by work group ID: {}", workGroupId);
         List<ProjectDTO> projects = projectService.findAllByWorkGroupId(workGroupId);
         return ResponseEntity.ok().body(projects);
     }
 
     @PostMapping("/{id}/add-task")
-    public ResponseEntity<TaskDTO> addTaskToProject(
-        @PathVariable Long id,
-        @Valid @RequestBody CreateTaskDTO taskDTO) {
-
+    public ResponseEntity<TaskDTO> addTaskToProject(@PathVariable Long id, @Valid @RequestBody CreateTaskDTO taskDTO) {
         TaskDTO createdTask = taskService.createTaskForProject(id, taskDTO);
-        return ResponseEntity
-            .created(URI.create("/api/tasks/" + createdTask.getId()))
-            .body(createdTask);
+        return ResponseEntity.created(URI.create("/api/tasks/" + createdTask.getId())).body(createdTask);
     }
 
     /* Endpoint para eliminar subtarea */
     @DeleteMapping("/{id}/remove-task/{taskId}")
-    public ResponseEntity<Void> removeTaskFromProject(
-        @PathVariable Long id,
-        @PathVariable Long taskId) {
-
+    public ResponseEntity<Void> removeTaskFromProject(@PathVariable Long id, @PathVariable Long taskId) {
         taskService.deleteTaskFromProject(id, taskId);
         return ResponseEntity.noContent().build();
     }
 
     /* Endpoint para listar subtareas */
     @GetMapping("/{id}/tasks")
-    public ResponseEntity<List<TaskDTO>> getProjectTasks(
-        @PathVariable Long id) {
-
+    public ResponseEntity<List<TaskDTO>> getProjectTasks(@PathVariable Long id) {
         List<TaskDTO> tasks = taskService.findAllTasksByProjectId(id);
         return ResponseEntity.ok().body(tasks);
     }
@@ -256,18 +247,23 @@ public class ProjectResource {
     @PostMapping("/{id}/assign-user")
     public ResponseEntity<ProjectMemberDTO> assignUserToProject(
         @PathVariable Long id,
-        @Valid @RequestBody AssignProjectToUserDTO assignProjectToUserDTO) {
-
+        @Valid @RequestBody AssignProjectToUserDTO assignProjectToUserDTO
+    ) {
         ProjectMemberDTO result = projectService.assignUserToProject(id, assignProjectToUserDTO);
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<List<ProjectMemberDTO>> getProjectMembers(
-        @PathVariable Long id) {
-
+    public ResponseEntity<List<ProjectMemberDTO>> getProjectMembers(@PathVariable Long id) {
         LOG.debug("REST request to get members for Project : {}", id);
         List<ProjectMemberDTO> members = projectService.getProjectMembers(id);
         return ResponseEntity.ok().body(members);
+    }
+
+    @GetMapping("/my-projects")
+    public ResponseEntity<List<ProjectDTO>> getMyProjects() {
+        LOG.debug("REST request to get projects for current user");
+        List<ProjectDTO> myProjects = projectService.getProjectsForCurrentUser();
+        return ResponseEntity.ok(myProjects);
     }
 }

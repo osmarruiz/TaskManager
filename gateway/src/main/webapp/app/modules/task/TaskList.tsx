@@ -58,6 +58,7 @@ const TaskList: React.FC = () => {
             <th>Descripción</th>
             <th>Estado</th>
             <th>Prioridad</th>
+            <th>Proyecto</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -69,6 +70,7 @@ const TaskList: React.FC = () => {
               <td>{task.description}</td>
               <td>{task.status?.name}</td>
               <td>{task.priority?.name}</td>
+              <td>{task.parentProject?.title || <span className="text-muted">Sin proyecto asignado</span>}</td>
               <td>
                 <button className="btn btn-info btn-sm me-2" onClick={() => setSelectedTaskId(task.id)}>
                   Ver

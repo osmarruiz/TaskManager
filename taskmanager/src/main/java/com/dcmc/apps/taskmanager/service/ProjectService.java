@@ -1,5 +1,7 @@
 package com.dcmc.apps.taskmanager.service;
 
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
+
 import com.dcmc.apps.taskmanager.domain.*;
 import com.dcmc.apps.taskmanager.domain.enumeration.Role;
 import com.dcmc.apps.taskmanager.repository.*;
@@ -9,23 +11,19 @@ import com.dcmc.apps.taskmanager.service.dto.CreateProjectDTO;
 import com.dcmc.apps.taskmanager.service.dto.ProjectDTO;
 import com.dcmc.apps.taskmanager.service.dto.ProjectMemberDTO;
 import com.dcmc.apps.taskmanager.service.mapper.ProjectMapper;
-
+import com.dcmc.apps.taskmanager.service.mapper.ProjectMemberMapper;
+import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.dcmc.apps.taskmanager.service.mapper.ProjectMemberMapper;
-import com.dcmc.apps.taskmanager.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 
 /**
  * Service Implementation for managing {@link com.dcmc.apps.taskmanager.domain.Project}.
@@ -50,13 +48,15 @@ public class ProjectService {
 
     private final WorkGroupMembershipRepository workGroupMembershipRepository;
 
-    public ProjectService(ProjectRepository projectRepository, ProjectMapper projectMapper,
-                          WorkGroupRepository workGroupRepository,
-                          ProjectMemberRepository projectMemberRepository,
-                          ProjectMemberMapper projectMemberMapper,
-                          UserRepository userRepository,
-                          WorkGroupMembershipRepository workGroupMembershipRepository) {
-
+    public ProjectService(
+        ProjectRepository projectRepository,
+        ProjectMapper projectMapper,
+        WorkGroupRepository workGroupRepository,
+        ProjectMemberRepository projectMemberRepository,
+        ProjectMemberMapper projectMemberMapper,
+        UserRepository userRepository,
+        WorkGroupMembershipRepository workGroupMembershipRepository
+    ) {
         this.projectRepository = projectRepository;
         this.projectMapper = projectMapper;
         this.workGroupRepository = workGroupRepository;
@@ -78,7 +78,8 @@ public class ProjectService {
         String currentUserLogin = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
 
-        Project project = projectRepository.findById(projectId)
+        Project project = projectRepository
+            .findById(projectId)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
 
         WorkGroupMembership membership = workGroupMembershipRepository
@@ -103,7 +104,8 @@ public class ProjectService {
         project.setStartDate(projectDTO.getStartDate());
         project.setEndDate(projectDTO.getEndDate());
 
-        WorkGroup workGroup = workGroupRepository.findById(projectDTO.getWorkGroupId())
+        WorkGroup workGroup = workGroupRepository
+            .findById(projectDTO.getWorkGroupId())
             .orElseThrow(() -> new RuntimeException("WorkGroup not found"));
         project.setWorkGroup(workGroup);
 
@@ -175,10 +177,7 @@ public class ProjectService {
             throw new RuntimeException("WorkGroup no encontrado con id: " + workGroupId);
         }
 
-        return projectRepository.findByWorkGroupId(workGroupId)
-            .stream()
-            .map(projectMapper::toDto)
-            .collect(Collectors.toList());
+        return projectRepository.findByWorkGroupId(workGroupId).stream().map(projectMapper::toDto).collect(Collectors.toList());
     }
 
     public ProjectMemberDTO assignUserToProject(Long id, AssignProjectToUserDTO assignDTO) {
@@ -186,11 +185,13 @@ public class ProjectService {
         validateAdminOrProjectOwnerOrModerator(id);
 
         // 2. Validate that the project exists
-        Project project = projectRepository.findById(id)
+        Project project = projectRepository
+            .findById(id)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
 
         // 3. Validate that the user exists
-        User user = userRepository.findOneByLogin(assignDTO.getUserLogin())
+        User user = userRepository
+            .findOneByLogin(assignDTO.getUserLogin())
             .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "loginnotfound"));
 
         // 4. Validate that the user is not already assigned
@@ -199,8 +200,7 @@ public class ProjectService {
         }
 
         // 5. Validate that the user is a member of the work group
-        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLogin(
-            project.getWorkGroup().getId(), assignDTO.getUserLogin())) {
+        if (!workGroupMembershipRepository.existsByWorkGroupIdAndUserLogin(project.getWorkGroup().getId(), assignDTO.getUserLogin())) {
             throw new BadRequestAlertException("User is not member of work group", ENTITY_NAME, "notworkgroupmember");
         }
 
@@ -217,16 +217,31 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public List<ProjectMemberDTO> getProjectMembers(Long projectId) {
         LOG.debug("Request to get members for Project : {}", projectId);
-        
+
         // Validate that the project exists
         if (!projectRepository.existsById(projectId)) {
             throw new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound");
         }
 
-        return projectMemberRepository.findByProjectId(projectId)
-            .stream()
-            .map(projectMemberMapper::toDto)
-            .collect(Collectors.toList());
+        return projectMemberRepository.findByProjectId(projectId).stream().map(projectMemberMapper::toDto).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ProjectDTO> getProjectsForCurrentUser() {
+        LOG.debug("Request to get projects for current user");
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("User not authenticated"));
+
+        User currentUser = userRepository
+            .findOneByLogin(currentUserLogin)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "user", "loginnotfound"));
+
+        return projectMemberRepository
+            .findByUser(currentUser)
+            .stream()
+            .map(ProjectMember::getProject)
+            .map(projectMapper::toDto)
+            .collect(Collectors.toList());
+    }
 }

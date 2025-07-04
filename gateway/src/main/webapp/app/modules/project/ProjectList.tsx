@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { getProjects } from '../../shared/util/project-api';
+import { getProjects, getMyProjects } from '../../shared/util/project-api';
 import { getWorkGroup } from '../../shared/util/work-group-api';
 import { Project } from '../../shared/model/project.model';
 import { WorkGroup } from '../../shared/model/work-group.model';
-import ProjectForm from './ProjectForm';
 import ProjectDetail from './ProjectDetail';
+import { useAppSelector } from '../../config/store';
+import { hasAnyAuthority } from '../../shared/auth/private-route';
+import { AUTHORITIES } from '../../config/constants';
 
 const ProjectList: React.FC = () => {
+  const account = useAppSelector(state => state.authentication.account);
   const [projects, setProjects] = useState<Project[]>([]);
   const [workGroups, setWorkGroups] = useState<Map<number, WorkGroup>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+
+  // Verificar si el usuario es ADMIN
+  const isAdmin = hasAnyAuthority(account.authorities, [AUTHORITIES.ADMIN]);
 
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const projectsData = await getProjects();
+      // Si es ADMIN, cargar todos los proyectos; si no, cargar solo los asignados al usuario
+      const projectsData = isAdmin ? await getProjects() : await getMyProjects();
       setProjects(projectsData);
 
       // Obtener información de WorkGroups únicos
@@ -52,7 +58,7 @@ const ProjectList: React.FC = () => {
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [isAdmin]);
 
   if (loading) return <div>Cargando proyectos...</div>;
 
@@ -63,16 +69,11 @@ const ProjectList: React.FC = () => {
   return (
     <div>
       <h2>Lista de Proyectos</h2>
-      <button className="btn btn-success mb-3" onClick={() => setShowForm(!showForm)}>
-        {showForm ? 'Cerrar formulario' : 'Nuevo proyecto'}
-      </button>
-      {showForm && (
-        <ProjectForm
-          onSuccess={() => {
-            setShowForm(false);
-            loadProjects();
-          }}
-        />
+      {!isAdmin && (
+        <div className="alert alert-info mb-3">
+          <i className="fas fa-info-circle me-2"></i>
+          Solo se muestran los proyectos asignados a tu usuario.
+        </div>
       )}
       <table className="table">
         <thead>

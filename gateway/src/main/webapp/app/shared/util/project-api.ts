@@ -8,6 +8,11 @@ export const getProjects = async (): Promise<Project[]> => {
   return response.data;
 };
 
+export const getMyProjects = async (): Promise<Project[]> => {
+  const response = await taskManagerApi.api.get<Project[]>('/projects/my-projects');
+  return response.data;
+};
+
 export const createProject = async (project: Project): Promise<Project> => {
   const response = await taskManagerApi.api.post<Project>('/projects', project);
   return response.data;

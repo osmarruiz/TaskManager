@@ -19,14 +19,7 @@ export default () => {
         {/* prettier-ignore */}
         {/* jhipster-needle-add-route-path - JHipster will add routes here */}
         <Route path="tareas" element={<TaskList />} />
-        <Route
-          path="proyectos"
-          element={
-            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
-              <ProjectList />
-            </PrivateRoute>
-          }
-        />
+        <Route path="proyectos" element={<ProjectList />} />
         <Route path="grupos" element={<WorkGroupList />} />
         <Route
           path="prioridades"

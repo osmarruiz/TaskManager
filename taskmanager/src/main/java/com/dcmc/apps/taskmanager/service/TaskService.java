@@ -416,6 +416,13 @@ public class TaskService {
             .stream()
             .map(TaskAssignment::getTask)
             .filter(task -> !task.getArchived()) // Solo tareas no archivadas
+            .map(task -> {
+                // Cargar explícitamente la información del proyecto si existe
+                if (task.getParentProject() != null) {
+                    task.getParentProject().getId(); // Esto fuerza la carga lazy
+                }
+                return task;
+            })
             .map(taskMapper::toDto)
             .collect(Collectors.toList());
     }
