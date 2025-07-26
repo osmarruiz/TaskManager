@@ -182,7 +182,7 @@ public class ProjectService {
 
     public ProjectMemberDTO assignUserToProject(Long id, AssignProjectToUserDTO assignDTO) {
         // 1. Validate user has permission (admin, owner or moderator)
-        validateAdminOrProjectOwnerOrModerator(id);
+        //validateAdminOrProjectOwnerOrModerator(id);
 
         // 2. Validate that the project exists
         Project project = projectRepository

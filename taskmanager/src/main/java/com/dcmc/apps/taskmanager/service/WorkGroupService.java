@@ -228,7 +228,7 @@ public class WorkGroupService {
     public void addModerator(Long workGroupId, String userId) {
         LOG.debug("Adding user {} as moderator to work group {}", userId, workGroupId);
 
-        validateAdminOrGroupOwner(workGroupId);
+        validateAdminOrGroupOwnerOrModerator(workGroupId);
 
         WorkGroup workGroup = validateWorkGroup(workGroupId);
         User user = validateUser(userId);

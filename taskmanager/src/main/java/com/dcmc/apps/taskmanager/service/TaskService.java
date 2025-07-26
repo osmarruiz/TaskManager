@@ -186,7 +186,6 @@ public class TaskService {
         Project project = projectRepository
             .findById(projectId)
             .orElseThrow(() -> new BadRequestAlertException("Project not found", ENTITY_NAME, "idnotfound"));
-        validateAdminOrProjectOwnerOrModerator(projectId);
 
         // Crear entidad
         Task task = new Task();
@@ -254,7 +253,6 @@ public class TaskService {
 
         Task task = getTaskById(taskId);
         validateTaskNotArchived(task);
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         User user = getUserByLogin(userLogin);
 
@@ -334,7 +332,6 @@ public class TaskService {
 
         Task task = getTaskById(taskId);
         validateTaskNotArchived(task);
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         Priority priority = priorityRepository
             .findByName(priorityName)
@@ -350,7 +347,6 @@ public class TaskService {
 
         Task task = getTaskById(taskId);
         validateTaskNotArchived(task);
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         TaskStatusCatalog status = statusRepository
             .findByName(statusName)
@@ -367,7 +363,6 @@ public class TaskService {
         LOG.debug("Request to archive task {}", taskId);
 
         Task task = getTaskById(taskId);
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         if (!"DONE".equals(task.getStatus().getName())) {
             throw new IllegalStateException("Only DONE tasks can be archived");
@@ -384,7 +379,7 @@ public class TaskService {
         Task task = taskRepository
             .findByIdAndArchivedTrue(taskId)
             .orElseThrow(() -> new RuntimeException("Archived task not found with id: " + taskId));
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
+
 
         task.setArchived(false);
         task.setArchivedDate(null);
@@ -397,9 +392,6 @@ public class TaskService {
         Task task = taskRepository
             .findByIdAndArchivedTrue(taskId)
             .orElseThrow(() -> new RuntimeException("Archived task not found with id: " + taskId));
-
-        // Validar permisos usando la misma lógica que deleteTaskFromProject
-        validateAdminOrGroupOwnerOrModerator(task.getWorkGroup().getId());
 
         taskRepository.delete(task);
     }
